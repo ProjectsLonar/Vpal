@@ -1,0 +1,61 @@
+
+findAllActiveLtMastDivisions = SELECT d.division_Id, d.division_Code, d.division_Name \
+						FROM LT_MAST_DIVISIONS d \
+						where (d.status = 'Active' OR d.status = 'ACTIVE') \
+						AND ( d.start_date <= SYSDATE \
+						AND (d.end_date is null or d.end_date >= SYSDATE) )
+
+
+
+
+findByDivisionIdLtMastDivisions = SELECT * FROM LT_MAST_DIVISIONS d where d.DIVISION_ID = ? 
+
+
+divisionCheckDetails = SELECT d.DIVISION_ID, d.DIVISION_CODE, d.DIVISION_NAME \
+								FROM  LT_MAST_DIVISIONS d \
+								WHERE d.DIVISION_CODE = ? or d.DIVISION_NAME = ?
+
+
+getDivisionByDivisionId = SELECT md.* ,cm.company_name as cmpName \
+								 FROM LT_MAST_DIVISIONS md, \
+									  lt_mast_company_master cm \
+									  WHERE md.company_id(+)=cm.company_id \
+									  AND md.division_id=?
+									  
+getLtMastDivisionsDataTable = select  *  from \
+(SELECT a.*,ROWNUM RNUM from ( select dm.DIVISION_ID,dm.DIVISION_CODE,dm.DIVISION_NAME,dm.START_DATE, \
+dm.END_DATE,dm.COMPANY_ID,cmv.value_name as STATUS ,cm.COMPANY_NAME as cmp_Name  \
+from LT_MAST_DIVISIONS dm,LT_MAST_COMN_MASTER_VALUES cmv ,LT_MAST_COMPANY_MASTER cm  \
+where cmv.value_code(+)=dm.status \
+AND cm.COMPANY_ID(+) = dm.COMPANY_ID  \
+AND upper(dm.DIVISION_CODE) like  nvl(?,upper(dm.DIVISION_CODE)) \
+AND upper(dm.DIVISION_NAME) like  nvl(?,upper(dm.DIVISION_NAME))  \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code))   \
+AND  TO_CHAR(dm.START_DATE,'DD-MM-YYYY')  LIKE nvl(?, TO_CHAR(dm.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (dm.END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (dm.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by  \
+CASE WHEN 2 = ? then dm.DIVISION_CODE END asc, \
+CASE WHEN 12 = ? then dm.DIVISION_CODE END desc, \
+CASE WHEN 3 = ? then upper(dm.DIVISION_NAME) END asc, \
+CASE WHEN 13 = ? then upper(dm.DIVISION_NAME) END desc, \
+CASE WHEN 6 = ? then cmv.value_code END asc, \
+CASE WHEN 16 = ? then cmv.value_code END desc, \
+CASE WHEN 4 = ? then dm.START_DATE END asc, \
+CASE WHEN 14 = ? then dm.START_DATE END desc, \
+CASE WHEN 5 = ? then dm.END_DATE END asc, \
+CASE WHEN 15 = ? then dm.END_DATE END desc,\
+CASE WHEN 7 =? then dm.last_update_date END desc, \
+CASE WHEN 17 = ? then dm.last_update_date END asc)a where ROWNUM <=?) WHERE rnum >=?
+
+
+getLtMastDivisionsCount = 	select count(dm.DIVISION_ID) \
+from LT_MAST_DIVISIONS dm,LT_MAST_COMN_MASTER_VALUES cmv ,LT_MAST_COMPANY_MASTER cm  \
+where cmv.value_code(+)=dm.status \
+AND cm.COMPANY_ID(+) = dm.COMPANY_ID  \
+AND upper(dm.DIVISION_CODE) like  nvl(?,upper(dm.DIVISION_CODE)) \
+AND upper(dm.DIVISION_NAME) like  nvl(?,upper(dm.DIVISION_NAME))  \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code))   \
+AND  TO_CHAR(dm.START_DATE,'DD-MM-YYYY')  LIKE nvl(?, TO_CHAR(dm.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (dm.END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (dm.END_DATE, SYSDATE ),'DD-MM-YYYY'))

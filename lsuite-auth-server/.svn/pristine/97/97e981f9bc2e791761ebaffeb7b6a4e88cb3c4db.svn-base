@@ -1,0 +1,37 @@
+findAllActiveVendorAddress = SELECT * FROM LT_MAST_VENDOR_ADDRESSES v
+
+
+getAllVendorsAddressByVendorId = SELECT v.VENDOR_ADD_ID,v.VENDOR_ID,v.ADDRESS_CODE,v.ADDRESS_1,v.ADDRESS_2,\
+v.ADDRESS_3, v.CITY,v.STATE,cmv.value_name as COUNTRY,v.PIN_CODE,v.PRIMARY_ADDRESS,v.BILLING,v.SHIPPING, \
+v.STATE_CODE,v.PAN_BASED_PROV_ID,v.GST_REG_NO,v.START_DATE,v.END_DATE,v.CREATED_BY, \
+v.CREATION_DATE,v.LAST_UPDATE_LOGIN,v.LAST_UPDATED_BY,v.LAST_UPDATE_DATE \
+FROM LT_MAST_VENDOR_ADDRESSES v,LT_MAST_COMN_MASTER_VALUES cmv  \
+where v.COUNTRY = cmv.value_code(+)  and v.VENDOR_ID = ?
+
+
+getAllActiveVendorsAddressByVendorId = SELECT VENDOR_ADD_ID,VENDOR_ID, \
+( nvl(ADDRESS_1,'') || nvl2(ADDRESS_2,(','||ADDRESS_2),null)  || \
+nvl2(ADDRESS_3,(','||ADDRESS_3),null)||','||CITY||','||STATE||','||cmv.value_name) as ADDRESS_1 \
+FROM LT_MAST_VENDOR_ADDRESSES v,LT_MAST_COMN_MASTER_VALUES cmv \
+WHERE v.VENDOR_ID = ? and v.COUNTRY = cmv.value_code(+)
+
+getVendorByIdVendorsAddress = SELECT * FROM LT_MAST_VENDOR_ADDRESSES v WHERE v.Vendor_Add_Id = ?
+
+
+saveVendorsAddress = INSERT INTO LT_MAST_VENDOR_ADDRESSES (Vendor_Add_Id,Vendor_id,Address_Code,Address_1,Address_2,Address_3, \
+				 				 City,State,Country,Pin_Code, Primary_Address, Billing,Shipping,State_Code,PAN_Based_Prov_ID,GST_REG_NO, \
+				 				 Start_Date, End_Date, Created_by, Creation_date, Last_update_login, Last_updated_by, Last_update_date ) \
+     		 					 VALUES(lt_mast_vendor_addresses_s.nextval,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+     		 					 
+     		 					 
+     		 					
+updateVendorsAddress = UPDATE LT_MAST_VENDOR_ADDRESSES SET Vendor_id=?,Address_Code=?,Address_1=?,Address_2=?,Address_3=?, \
+				 			  City=?,State=?,Country=?,Pin_Code=?, Primary_Address=?, Billing=?,Shipping=?,State_Code=?,PAN_Based_Prov_ID=?,GST_Reg_No=?, \
+				 			  Start_Date=?, End_Date=?, Last_update_login=?, Last_updated_by=?, Last_update_date=? \
+				 		 	  WHERE Vendor_Add_Id =? 
+	
+	
+deleteVendorsAddress = DELETE FROM LT_MAST_VENDOR_ADDRESSES WHERE Vendor_Add_Id = ?		
+
+
+deleteByVendorIdVendorsAddress = DELETE FROM LT_MAST_VENDOR_ADDRESSES WHERE VENDOR_ID = ?		 		 	      		 					 

@@ -1,0 +1,23 @@
+findByBudgetIdBudgetCostCenter = SELECT * FROM LT_MAST_BUDGET_COSTCENTERS bc \
+				 						  where bc.start_date <= SYSDATE \
+				 						  AND bc.end_date is null or bc.end_date > SYSDATE \
+				 						  AND bc.BUDGET_ID =?
+				 						  
+				 						  
+findByCostCenterIdBudgetCostCenter = SELECT * FROM LT_MAST_BUDGET_COSTCENTERS bc \
+											  where  bc.start_date <= SYSDATE \
+											  AND bc.end_date is null or bc.end_date > SYSDATE \
+				  							  AND bc.COST_CENTER_ID =?
+				  							  
+				  							  
+				  							  
+findAllActiveBudgetCostCenter = SELECT * FROM LT_MAST_BUDGET_COSTCENTERS bc \
+										 where bc.start_date <= SYSDATE \
+										 AND bc.end_date is null or bc.end_date > SYSDATE			  			
+										 
+										 
+findByBudgetIdAndCostCenterIdBudgetCostCenter = SELECT * FROM LT_MAST_BUDGET_COSTCENTERS bc \
+				 										 where bc.status = 'Active' OR bc.status = 'ACTIVE' \
+														 AND bc.start_date <= SYSDATE \
+														 AND bc.end_date is null or bc.end_date > SYSDATE \
+														 AND bc.BUDGET_ID= ? AND bc.COST_CENTER_ID = ?				  

@@ -1,0 +1,139 @@
+getAllVendorAgrrement = SELECT * FROM LT_MAST_VENDOR_AGREEMENTS v 
+
+
+getVendorAgreementById_22-2-2019 = SELECT v.* ,a.FILE_NAME as image_name \
+FROM LT_MAST_VENDOR_AGREEMENTS v,LT_MAST_VENDOR_FILE_ATTACHMENT a \
+WHERE v.AGREEMENT_ID = ? \
+and a.VENDOR_AGREEMENT_ID(+) = v.AGREEMENT_ID
+
+
+
+getVendorAgreementById = SELECT v.AGREEMENT_ID,v.VENDOR_ID,v.AGREEMENT_CODE,v.AGREEMENT_DESC,v.ATTACHMENT,v.PRODUCT_CATEGORY_ID, \
+cmv.value_name STATUS_VALUE,v.STATUS,v.TARGET_DATE,v.VENDOR_ADD_ID,v.START_DATE,v.END_DATE,v.CREATED_BY,v.CREATION_DATE,v.LAST_UPDATE_LOGIN, \
+v.LAST_UPDATED_BY,v.LAST_UPDATE_DATE,v.COMPANY_ID ,a.FILE_NAME as image_name ,cm.COMPANY_NAME as compnay_name,\
+mv.VENDOR_NAME||' ( '||mv.VENDOR_CODE||' )' AS VENDOR_NAME,va.ADDRESS_CODE as vendor_addr \
+FROM LT_MAST_VENDOR_AGREEMENTS v,LT_MAST_VENDOR_FILE_ATTACHMENT a ,LT_MAST_COMN_MASTER_VALUES cmv,LT_VEND_COMPANY_MASTER cm, \
+LT_MAST_VENDORS mv,LT_MAST_VENDOR_ADDRESSES va  \
+WHERE v.AGREEMENT_ID = ?  \
+and a.VENDOR_AGREEMENT_ID(+) = v.AGREEMENT_ID AND v.STATUS = cmv.VALUE_CODE(+) AND v.COMPANY_ID = cm.COMPANY_ID(+)  \
+AND v.VENDOR_ID = mv.VENDOR_ID(+) AND v.VENDOR_ADD_ID = va.VENDOR_ADD_ID(+)
+
+saveVendorAgreement = INSERT INTO LT_MAST_VENDOR_AGREEMENTS (AGREEMENT_ID,VENDOR_ID,AGREEMENT_CODE,AGREEMENT_DESC, ATTACHMENT,STATUS,TARGET_DATE,START_DATE, \
+				 				   END_DATE, CREATED_BY, CREATION_DATE, LAST_UPDATE_LOGIN, LAST_UPDATED_BY, LAST_UPDATE_DATE ) \
+     		      				   VALUES(LT_MAST_VENDOR_AGREEMENTS.nextval,?,?,?,?,?,?,?,?,?,?,?,?,?)
+     		      				   
+     		      				   
+updateVendorAgreement = UPDATE LT_MAST_VENDOR_AGREEMENTS SET \
+				 			   VENDOR_ID=?,AGREEMENT_CODE=?,AGREEMENT_DESC=?, ATTACHMENT=?,STATUS=?,TARGET_DATE=?,START_DATE=?, \
+							   END_DATE=?, CREATED_BY=?, CREATION_DATE=?, LAST_UPDATE_LOGIN=?, LAST_UPDATED_BY=?, LAST_UPDATE_DATE=? \
+				 			   WHERE AGREEMENT_ID=?
+				 			   
+updateVendorAttchPath  = 	UPDATE LT_MAST_VENDOR_AGREEMENTS SET ATTACHMENT = ?  WHERE 	AGREEMENT_ID  = ?
+
+deleteVendorAgreement = DELETE FROM LT_MAST_VENDOR_AGREEMENTS WHERE AGREEMENT_ID = ? 	
+
+
+getAllVendorAgrrementByVendorId_OLD = SELECT * FROM LT_MAST_VENDOR_AGREEMENTS v WHERE v.VENDOR_ID = ?	
+
+getAllVendorAgrrementByVendorId = SELECT v.AGREEMENT_ID,v.VENDOR_ID,v.AGREEMENT_CODE,v.AGREEMENT_DESC, \
+nvl2(vfa.FILE_NAME,svm.SYSTEM_VALUE||vfa.FILE_NAME,'') AS ATTACHMENT,v.PRODUCT_CATEGORY_ID,cmv.VALUE_NAME AS STATUS, \
+v.TARGET_DATE,v.VENDOR_ADD_ID,v.START_DATE,v.END_DATE, va.ADDRESS_CODE as ADDRESS_CODE, va.ADDRESS_1 AS VENDOR_ADDR \
+FROM LT_MAST_VENDOR_AGREEMENTS v, LT_MAST_VENDOR_ADDRESSES va ,LT_MAST_SYS_VARIABLES svm,LT_MAST_VENDOR_FILE_ATTACHMENT vfa, \
+LT_MAST_COMN_MASTER cm,LT_MAST_COMN_MASTER_VALUES cmv \
+WHERE v.VENDOR_ID = ?  \
+AND v.VENDOR_ADD_ID = va.VENDOR_ADD_ID  \
+AND svm.VARIABLE_NAME = 'FILE_OPEN_PATH'  AND v.COMPANY_ID = svm.COMPANY_ID AND v.AGREEMENT_ID = vfa.VENDOR_AGREEMENT_ID(+)  \
+AND v.STATUS = cmv.VALUE_CODE(+) AND cmv.MASTER_ID = cm.MASTER_ID AND cm.MASTER_NAME = 'VENDOR_AGR_STATUS'
+    
+    
+deleteAgrrementByVendorIdByVendorId = DELETE FROM LT_MAST_VENDOR_AGREEMENTS WHERE VENDOR_ID = ?
+
+getLtMastVendorAgreementsDataTable = select  *  from \
+(SELECT a.*,ROWNUM RNUM from \
+( SELECT d.AGREEMENT_ID,d.VENDOR_ID,d.AGREEMENT_CODE,d.AGREEMENT_DESC, \
+nvl2(vfa.FILE_NAME,svm.SYSTEM_VALUE||vfa.FILE_NAME,'') AS ATTACHMENT, \
+d.PRODUCT_CATEGORY_ID,cmv.value_name as STATUS,d.TARGET_DATE, d.VENDOR_ADD_ID,d.START_DATE,d.END_DATE,d.COMPANY_ID, \
+nvl2( d.VENDOR_ID ,(  v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')' ),' ') as vendor_name      \
+FROM LT_MAST_VENDOR_AGREEMENTS d ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_VENDORS v , \
+LT_MAST_VENDOR_FILE_ATTACHMENT vfa,LT_MAST_SYS_VARIABLES svm   \
+where d.COMPANY_ID = ? AND  cmv.value_code(+) = d.status   and v.VENDOR_ID(+)  = d.VENDOR_ID  \
+AND svm.VARIABLE_NAME = 'FILE_OPEN_PATH'  AND d.COMPANY_ID = svm.COMPANY_ID AND d.AGREEMENT_ID = vfa.VENDOR_AGREEMENT_ID(+)  \
+and  upper(d.AGREEMENT_CODE) like nvl(?,upper(d.AGREEMENT_CODE)) \
+and  upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')') like nvl(?,upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')')) \
+and nvl(upper(d.STATUS),'xx') like nvl(?,nvl(upper(d.STATUS),'xx')) \
+AND  TO_CHAR(d.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(d.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl( d.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (d.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by  \
+CASE WHEN 2 = ? then upper(d.AGREEMENT_CODE) END asc,  \
+CASE WHEN 12 = ? then upper(d.AGREEMENT_CODE) END desc, \
+CASE WHEN 3 = ? then upper(vendor_name) END asc, \
+CASE WHEN 13 = ? then upper(vendor_name) END desc, \
+CASE WHEN 4 = ? then upper(d.STATUS) END asc,  \
+CASE WHEN 14 = ? then upper(d.STATUS) END desc,\
+CASE WHEN 5 = ? then d.START_DATE END asc, \
+CASE WHEN 15 = ? then d.START_DATE END desc, \
+CASE WHEN 6 = ? then d.END_DATE END asc, \
+CASE WHEN 16 = ? then d.END_DATE END desc, \
+CASE WHEN 7 = ? then d.last_update_date END desc, \
+CASE WHEN 17 = ? then d.last_update_date END asc)a where ROWNUM <=? ) WHERE rnum >=?
+
+getLtMastVendorAgreementsCount = 	SELECT count(d.AGREEMENT_ID) \
+FROM LT_MAST_VENDOR_AGREEMENTS d ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_VENDORS v , \
+LT_MAST_VENDOR_FILE_ATTACHMENT vfa,LT_MAST_SYS_VARIABLES svm   \
+where d.COMPANY_ID = ? AND cmv.value_code(+) = d.status   and v.VENDOR_ID(+)  = d.VENDOR_ID  \
+AND svm.VARIABLE_NAME = 'FILE_OPEN_PATH'  AND d.COMPANY_ID = svm.COMPANY_ID AND d.AGREEMENT_ID = vfa.VENDOR_AGREEMENT_ID(+)  \
+and  upper(d.AGREEMENT_CODE) like nvl(?,upper(d.AGREEMENT_CODE)) \
+and  upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')') like nvl(?,upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')')) \
+and nvl(upper(d.STATUS),'xx') like nvl(?,nvl(upper(d.STATUS),'xx')) \
+AND  TO_CHAR(d.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(d.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl( d.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (d.END_DATE, SYSDATE ),'DD-MM-YYYY'))
+
+getLtMastVendorAgreementsDataTableByVendorId = 	select  *  from  \
+(SELECT a.*,ROWNUM RNUM from  \
+( SELECT d.AGREEMENT_ID,d.VENDOR_ID,d.AGREEMENT_CODE,d.AGREEMENT_DESC, \
+nvl2(vfa.FILE_NAME,svm.SYSTEM_VALUE||vfa.FILE_NAME,'') AS ATTACHMENT,d.PRODUCT_CATEGORY_ID, \
+cmv.value_name as STATUS,d.TARGET_DATE, d.VENDOR_ADD_ID,d.START_DATE,d.END_DATE,d.COMPANY_ID, \
+nvl2( d.VENDOR_ID ,(  v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')' ),' ') as vendor_name      \
+FROM LT_MAST_VENDOR_AGREEMENTS d ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_VENDORS v ,LT_MAST_SYS_VARIABLES svm   ,\
+LT_MAST_VENDOR_FILE_ATTACHMENT vfa  \
+where  cmv.value_code(+) = d.status   \
+and v.VENDOR_ID(+)  = d.VENDOR_ID  \
+AND d.COMPANY_ID = svm.COMPANY_ID  \
+and d.VENDOR_ID = ? \
+AND d.AGREEMENT_ID = vfa.VENDOR_AGREEMENT_ID(+)  \
+and  upper(d.AGREEMENT_CODE) like nvl(?,upper(d.AGREEMENT_CODE)) \
+and  upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')') like nvl(?,upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')')) \
+and upper(d.STATUS ) like nvl(?,upper(d.STATUS)) \
+AND svm.VARIABLE_NAME = 'FILE_OPEN_PATH' \
+AND  TO_CHAR(d.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(d.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl( d.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (d.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by  \
+CASE WHEN 1 = ? then upper(d.AGREEMENT_CODE) END asc,  \
+CASE WHEN 11 = ? then upper(d.AGREEMENT_CODE) END desc, \
+CASE WHEN 2 = ? then upper(vendor_name) END asc, \
+CASE WHEN 12 = ? then upper(vendor_name) END desc, \
+CASE WHEN 3 = ? then upper(d.STATUS) END asc,  \
+CASE WHEN 13 = ? then upper(d.STATUS) END desc,\
+CASE WHEN 4 = ? then d.START_DATE END asc, \
+CASE WHEN 14 = ? then d.START_DATE END desc, \
+CASE WHEN 5 = ? then d.END_DATE END asc, \
+CASE WHEN 15 = ? then d.END_DATE END desc, \
+CASE WHEN 6 = ? then d.last_update_date END desc, \
+CASE WHEN 16 = ? then d.last_update_date END asc)a where ROWNUM <=? ) WHERE rnum >=?
+
+getLtMastVendorAgreementsCountByVendorId = 	 SELECT count(d.AGREEMENT_ID) \
+FROM LT_MAST_VENDOR_AGREEMENTS d ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_VENDORS v ,LT_MAST_SYS_VARIABLES svm   ,\
+LT_MAST_VENDOR_FILE_ATTACHMENT vfa  \
+where  cmv.value_code(+) = d.status   \
+and v.VENDOR_ID(+)  = d.VENDOR_ID  \
+AND d.COMPANY_ID = svm.COMPANY_ID  \
+and d.VENDOR_ID = ? \
+AND d.AGREEMENT_ID = vfa.VENDOR_AGREEMENT_ID(+)  \
+and  upper(d.AGREEMENT_CODE) like nvl(?,upper(d.AGREEMENT_CODE)) \
+and  upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')') like nvl(?,upper(v.VENDOR_NAME||'('|| v.VENDOR_CODE|| ')')) \
+and upper(d.STATUS ) like nvl(?,upper(d.STATUS)) \
+AND svm.VARIABLE_NAME = 'FILE_OPEN_PATH' \
+AND  TO_CHAR(d.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(d.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl( d.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (d.END_DATE, SYSDATE ),'DD-MM-YYYY')) 
+
+deleteAttachmentByAgreementId = DELETE FROM LT_MAST_VENDOR_FILE_ATTACHMENT WHERE VENDOR_AGREEMENT_ID = ?      				   

@@ -1,0 +1,43 @@
+getLtMastDocumentListDatatableRecords = select  *  from \
+(SELECT a.*,ROWNUM RNUM from \
+( select  dl.DOC_LIST_ID,dl.FILE_NAME,dl.CREATED_BY,dl.LAST_UPDATE_DATE, \
+( cmvvd.VALUE_NAME||' '|| eml.FIRST_NAME|| ' '||eml.LAST_NAME||' '||'('|| eml.EMPLOYEE_NUMBER|| ')' ) as uploaded_by , \
+msv.SYSTEM_VALUE||dl.FILE_NAME as FILE_PATH   \
+from LT_MAST_DOCUMENT_LIST  dl ,LT_MAST_USERS mu,lt_mast_employees eml,LT_MAST_COMN_MASTER_VALUES cmvvd , \
+LT_MAST_SYS_VARIABLES msv,LT_MAST_COMN_MASTER cm  \
+where  dl.LAST_UPDATED_BY = mu.USER_ID  and cmvvd.value_code(+) = eml.title  AND cmvvd.MASTER_ID(+) = cm.MASTER_ID  \
+AND cm.MASTER_NAME = 'TITLE_MASTER'\
+AND mu.EMPLOYEE_ID=eml.EMPLOYEE_ID \
+AND msv.VARIABLE_NAME = 'FILE_OPEN_PATH' \
+AND dl.COMPANY_ID = ? \
+AND dl.COMPANY_ID = msv.COMPANY_ID \
+AND nvl(upper(dl.FILE_NAME),'xx') like nvl(?,nvl(upper(dl.FILE_NAME),'xx')) \
+AND UPPER(( cmvvd.value_name||' '||eml.FIRST_NAME||' '||eml.LAST_NAME||'('||eml.EMPLOYEE_NUMBER||')') )  \
+LIKE UPPER(COALESCE( ?, (cmvvd.value_name||' '||eml.FIRST_NAME||' '||eml.LAST_NAME||'('||eml.EMPLOYEE_NUMBER||')' ))) \
+AND  TO_CHAR(dl.LAST_UPDATE_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(dl.LAST_UPDATE_DATE,'DD-MM-YYYY'))  \
+order by \
+CASE WHEN 2 = ? then upper(dl.FILE_NAME) END asc, \
+CASE WHEN 12 = ? then upper(dl.FILE_NAME) END desc, \
+CASE WHEN 3 = ? then upper(uploaded_by) END asc, \
+CASE WHEN 13 = ? then upper(uploaded_by) END desc,\
+CASE WHEN 4 = ? then dl.LAST_UPDATE_DATE END desc, \
+CASE WHEN 14 = ? then dl.LAST_UPDATE_DATE END asc )a  where ROWNUM <=? ) WHERE rnum >=?
+
+
+getCountLtMastDocumentList= select  count(dl.DOC_LIST_ID) \
+from LT_MAST_DOCUMENT_LIST  dl ,LT_MAST_USERS mu,lt_mast_employees eml,LT_MAST_COMN_MASTER_VALUES cmvvd , \
+LT_MAST_SYS_VARIABLES msv,LT_MAST_COMN_MASTER cm  \
+where  dl.LAST_UPDATED_BY = mu.USER_ID  and cmvvd.value_code(+) = eml.title  AND cmvvd.MASTER_ID(+) = cm.MASTER_ID  \
+AND cm.MASTER_NAME = 'TITLE_MASTER'\
+AND mu.EMPLOYEE_ID=eml.EMPLOYEE_ID \
+AND msv.VARIABLE_NAME = 'FILE_OPEN_PATH' \
+AND dl.COMPANY_ID = ? \
+AND dl.COMPANY_ID = msv.COMPANY_ID \
+AND nvl(upper(dl.FILE_NAME),'xx') like nvl(?,nvl(upper(dl.FILE_NAME),'xx')) \
+AND UPPER(( cmvvd.value_name||' '||eml.FIRST_NAME||' '||eml.LAST_NAME||'('||eml.EMPLOYEE_NUMBER||')') )  \
+LIKE UPPER(COALESCE( ?, (cmvvd.value_name||' '||eml.FIRST_NAME||' '||eml.LAST_NAME||'('||eml.EMPLOYEE_NUMBER||')' ))) \
+AND  TO_CHAR(dl.LAST_UPDATE_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(dl.LAST_UPDATE_DATE,'DD-MM-YYYY'))
+
+
+getCompanyIdByUserId = SELECT em.COMPANY_ID FROM LT_MAST_EMPLOYEES em,LT_MAST_USERS um \
+WHERE um.USER_ID = ? AND um.EMPLOYEE_ID = em.EMPLOYEE_ID

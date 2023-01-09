@@ -1,0 +1,30 @@
+listVendorBanks = SELECT * FROM LT_MAST_VENDOR_BANKS v 
+
+findByVendorIdWithAddressId = SELECT * FROM LT_MAST_VENDOR_BANKS v WHERE v.VENDOR_ID = ? AND v.VENDOR_ADD_ID = ?
+
+getVendorBankByBankId = SELECT * FROM LT_MAST_VENDOR_BANKS v WHERE v.VENDOR_BANK_ID = ?
+
+getVendorBankByVendorId = SELECT * FROM LT_MAST_VENDOR_BANKS v WHERE v.VENDOR_ID = ?
+
+
+saveVendorBanks = INSERT INTO LT_MAST_VENDOR_BANKS (VENDOR_BANK_ID,VENDOR_ID,VENDOR_ADD_ID,BANK_NAME, BANK_BRANCH, \
+							  IFSC_CODE, BRANCH_ADDRESS, BANK_ACCOUNT_NO, Start_Date, End_Date, Created_by, \
+				 			  Creation_date, Last_update_login, Last_updated_by, Last_update_date ) \
+     						  VALUES(LT_MAST_VENDOR_BANKS_S.nextval,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+     						  
+     						  
+updateVendorBanks = UPDATE LT_MAST_VENDOR_BANKS SET VENDOR_ID=?,VENDOR_ADD_ID=?,BANK_NAME=?,BANK_BRANCH=?, \
+							  IFSC_CODE=?, BRANCH_ADDRESS=?, BANK_ACCOUNT_NO=?, Start_Date=?, End_Date=?, \
+							  Created_by=?,Creation_date=?, Last_update_login=?, Last_updated_by=?, \
+							  Last_update_date=? \
+							  WHERE VENDOR_BANK_ID=?     	
+							  
+							  
+deleteVendorBanks = DELETE FROM LT_MAST_VENDOR_BANKS WHERE VENDOR_BANK_ID = ?
+
+
+getAllVendorBankByVendorId = SELECT * FROM LT_MAST_VENDOR_BANKS v WHERE v.VENDOR_ID = ?							  					  
+
+
+
+deleteByVendorIdVendorBanks = DELETE FROM LT_MAST_VENDOR_BANKS WHERE VENDOR_ID = ?

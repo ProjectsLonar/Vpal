@@ -1,0 +1,55 @@
+findRoleModulesByRoleIdANDModuleId = SELECT * FROM lt_mast_role_modules lm WHERE lm.ROLE_ID=? and lm.MODULE_ID=?
+
+findByRoleIdOutputModuleID =
+
+findByUserIdANDRoleId =
+
+findInRoleIdAndModuleIdWithInDate =
+
+findByRoleIdWithUserId =
+
+findMenu =  SELECT ltMastModules.module_Id,ltMastModules.module_Group,ltMastModules.module_Name,ltMastModules.MODULE_CODE,ltMastModules.module_Url,ltMastModules.SEQUENCE_NUMBER, \
+				 ltMastRoleModules.CREATE_FLAG,ltMastRoleModules.UPDATE_FLAG, ltMastRoleModules.edit_FLAG,ltMastRoleModules.READ_FLAG,ltMastRoleModules.DELETE_FLAG \
+		 		 FROM Lt_Mast_Role_Modules ltMastRoleModules,Lt_Mast_Modules ltMastModules WHERE ltMastRoleModules.module_Id = ltMastModules.module_Id AND (ltMastRoleModules.start_Date) <= SYSDATE \
+				 AND ((ltMastRoleModules.end_Date) IS NULL OR (ltMastRoleModules.end_Date) >= SYSDATE) \
+				 AND ltMastRoleModules.role_Id IN (SELECT ltMastUserRoles.role_Id \
+				 FROM Lt_Mast_User_Roles ltMastUserRoles , Lt_Mast_Roles ltMastRoles \
+				 WHERE ltMastUserRoles.role_Id = ltMastRoles.role_Id \
+				 AND (ltMastRoles.start_Date) <= SYSDATE \
+				 AND ((ltMastRoles.end_Date) IS NULL   OR (ltMastRoles.END_DATE) >= SYSDATE) \
+				 AND (ltMastRoles.status = 'ACTIVE' ) \
+				 AND ltMastUserRoles.user_Id =? \
+				 AND (ltMastUserRoles.start_Date) <= SYSDATE \
+				 AND ((ltMastUserRoles.end_Date) IS NULL OR ltMastUserRoles.END_DATE >= SYSDATE)) \
+				 AND ltMastRoleModules.module_Id IN( SELECT ltMastModules.module_Id \
+				 FROM lt_Mast_Modules ltMastModules \
+				 WHERE ltMastModules.status = 'ACTIVE'\
+				 AND (ltMastModules.start_Date) <= SYSDATE \
+				 AND  ((ltMastModules.end_Date) IS NULL  OR (ltMastModules.end_Date) >= SYSDATE)) order by ltMastModules.SEQUENCE_NUMBER asc
+				 
+				 
+findMenuWithModuleName = Select create_flag,edit_flag ,delete_flag,read_flag,update_flag from lt_mast_role_modules lmrm,lt_mast_users lmu,lt_mast_modules lmm ,lt_mast_roles lmr,lt_mast_user_roles lmur where lmur.user_id=lmu.USER_ID AND lmrm.MODULE_ID=lmm.MODULE_ID AND lmr.ROLE_ID=lmrm.ROLE_ID AND lmm.MODULE_NAME= ? AND lmu.user_id=?
+
+findAllActive = SELECT * FROM lt_mast_role_modules rm WHERE  UPPER(rm.status)='ACTIVE'
+
+findByRoleIdGetModuleName =
+
+findByRoleId = SELECT lm.MODULE_ID,lm.MODULE_NAME,lm.MODULE_DESC as module_Description,lm.MODULE_URL, \
+lm.MODULE_GROUP,lm.STATUS,lm.START_DATE,lm.END_DATE,lm.MODULE_CODE,rm.* \
+FROM lt_mast_role_modules rm,lt_mast_modules lm WHERE rm.ROLE_ID=? and rm.MODULE_ID=lm.MODULE_ID
+
+getModuleListWithUserId = 
+
+getModuleListWithRoleId = Select ROLE_FUNC_ID,MODULE_ID from lt_mast_role_modules where ROLE_ID IN (:ROLE_ID)
+
+
+getLtMastRoleModulesByModuleId = select rm.ROLE_FUNC_ID,rm.ROLE_ID,rm.MODULE_ID \
+FROM lt_mast_role_modules rm WHERE rm.MODULE_ID =? \
+AND ( rm.start_date <= SYSDATE \
+AND (rm.end_date is null or rm.end_date >= SYSDATE) )
+
+
+checkForDuplicateModuleAgainstRole = select rm.ROLE_FUNC_ID,rm.ROLE_ID,rm.MODULE_ID \
+FROM lt_mast_role_modules rm WHERE rm.ROLE_ID = ? AND rm.MODULE_ID =? \
+AND ( rm.start_date <= SYSDATE \
+AND (rm.end_date is null or rm.end_date >= SYSDATE) )

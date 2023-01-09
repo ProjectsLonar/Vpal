@@ -1,0 +1,169 @@
+getLtInvoiceHeadersDataTable =  select  *  from \
+(SELECT a.*,ROWNUM RNUM from \
+( select  ih.INVOICE_HEADER_ID, cmv.value_name as INVOICE_TYPE,ih.INTERNAL_INVOICE_NUMBER,ih.INVOICE_NUM, \
+ih.INVOICE_DATE,ih.INVOICE_RECEIVED_DATE,ih.PO_HEADER_ID,ih.BUYER_ID,ih.VENDOR_ID,ih.VENDOR_ADD_ID, \
+ih.DESCRIPTION,ih.INVOICE_AMOUNT,ih.BILLING_ADD_ID,ih.SHIPPING_ADD_ID,cmvs.value_name as STATUS,ih.AMOUNT_PAID, \
+ih.VOUCHER_NUM,ih.VOUCHER_DATE,ih.INVOICE_CURRENCY,ih.SOURCE,ih.SOURCE_REF_NO, \
+nvl2(me.EMPLOYEE_ID,( cmvt.value_name||' ' || me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ),'') AS buyer , \
+ph.PO_NUMBER  \
+from LT_INVOICE_HEADERS  ih ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER_VALUES cmvs, \
+LT_MAST_EMPLOYEES me ,LT_MAST_COMN_MASTER_VALUES cmvt ,LT_PO_HEADERS ph   \
+where cmvs.value_code(+) = ih.status \
+AND me.EMPLOYEE_ID(+) = ih.BUYER_ID \
+AND cmvt.value_code(+) = me.TITLE \
+AND cmv.value_code(+) = ih.INVOICE_TYPE \
+AND me.COMPANY_ID = ?  \
+AND ih.PO_HEADER_ID = ph.PO_HEADER_ID(+) \
+AND ( nvl(ih.INITIATOR_ID,-99) = nvl(?,nvl(ih.INITIATOR_ID,-99)) \
+OR nvl(ih.BUYER_ID,-99) = nvl(?,nvl(ih.BUYER_ID,-99)) ) \
+AND nvl(upper(ih.INVOICE_TYPE),'xx') like nvl(?,nvl(upper(ih.INVOICE_TYPE),'xx'))  \
+AND nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx') like nvl(?,nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx')) \
+AND nvl(upper(ih.INVOICE_NUM),'xx') like nvl(?,nvl(upper(ih.INVOICE_NUM),'xx')) \
+AND  TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY'))  \
+AND nvl( upper(ih.DESCRIPTION),'xx') like nvl(?,nvl(upper(ih.DESCRIPTION),'xx') ) \
+AND nvl(ih.INVOICE_AMOUNT,-99) like nvl( ?, nvl(ih.INVOICE_AMOUNT,-99) ) \
+AND nvl(ih.AMOUNT_PAID,-99) like nvl( ?, nvl(ih.AMOUNT_PAID,-99)  ) \
+AND nvl(upper(cmvs.value_name),'xx') like nvl(?,nvl(upper(cmvs.value_name),'xx')  ) \
+AND nvl(upper(ph.PO_NUMBER),'xx') like nvl(?,nvl(upper(ph.PO_NUMBER),'xx')  ) \
+order by \
+CASE WHEN 2 = ? then upper(ih.INVOICE_TYPE) END asc, \
+CASE WHEN 12 = ? then upper(ih.INVOICE_TYPE) END desc, \
+CASE WHEN 3 = ? then upper(ih.INTERNAL_INVOICE_NUMBER) END asc, \
+CASE WHEN 13 = ? then upper(ih.INTERNAL_INVOICE_NUMBER) END desc, \
+CASE WHEN 4 = ? then upper(ih.INVOICE_NUM) END asc, \
+CASE WHEN 14 = ? then upper(ih.INVOICE_NUM) END desc, \
+CASE WHEN 5 = ? then ih.INVOICE_DATE END asc, \
+CASE WHEN 15 = ? then ih.INVOICE_DATE END desc, \
+CASE WHEN 6 = ? then upper(ih.DESCRIPTION) END asc, \
+CASE WHEN 16 = ? then (ih.DESCRIPTION) END desc, \
+CASE WHEN 7 = ? then ih.INVOICE_AMOUNT END asc, \
+CASE WHEN 17 = ? then ih.INVOICE_AMOUNT END desc, \
+CASE WHEN 9 = ? then upper(cmvs.value_name) END asc, \
+CASE WHEN 19 = ? then upper(cmvs.value_name) END desc,\
+CASE WHEN 10 = ? then ih.AMOUNT_PAID END asc, \
+CASE WHEN 20 = ? then ih.AMOUNT_PAID END desc, \
+CASE WHEN 8 = ? then ph.PO_NUMBER END asc, \
+CASE WHEN 18 = ? then ph.PO_NUMBER END desc, \
+CASE WHEN 1 = ? then ih.last_update_date END desc, \
+CASE WHEN 11 = ? then ih.last_update_date END asc)a  where ROWNUM <=?) WHERE rnum >=?
+
+
+getLtInvoiceHeadersCount = select count(ih.INVOICE_HEADER_ID) \
+from LT_INVOICE_HEADERS  ih ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER_VALUES cmvs, \
+LT_MAST_EMPLOYEES me ,LT_MAST_COMN_MASTER_VALUES cmvt ,LT_PO_HEADERS ph   \
+where cmvs.value_code(+) = ih.status \
+AND me.EMPLOYEE_ID(+) = ih.BUYER_ID \
+AND cmvt.value_code(+) = me.TITLE \
+AND cmv.value_code(+) = ih.INVOICE_TYPE \
+AND me.COMPANY_ID = ?  \
+AND ih.PO_HEADER_ID = ph.PO_HEADER_ID(+) \
+AND ( nvl(ih.INITIATOR_ID,-99) = nvl(?,nvl(ih.INITIATOR_ID,-99)) \
+OR nvl(ih.BUYER_ID,-99) = nvl(?,nvl(ih.BUYER_ID,-99)) ) \
+AND nvl(upper(ih.INVOICE_TYPE),'xx') like nvl(?,nvl(upper(ih.INVOICE_TYPE),'xx'))  \
+AND nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx') like nvl(?,nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx')) \
+AND nvl(upper(ih.INVOICE_NUM),'xx') like nvl(?,nvl(upper(ih.INVOICE_NUM),'xx')) \
+AND  TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY'))  \
+AND nvl( upper(ih.DESCRIPTION),'xx') like nvl(?,nvl(upper(ih.DESCRIPTION),'xx') ) \
+AND nvl(ih.INVOICE_AMOUNT,-99) like nvl( ?, nvl(ih.INVOICE_AMOUNT,-99) ) \
+AND nvl(ih.AMOUNT_PAID,-99) like nvl( ?, nvl(ih.AMOUNT_PAID,-99)  ) \
+AND nvl(upper(cmvs.value_name),'xx') like nvl(?,nvl(upper(cmvs.value_name),'xx')  ) \
+AND nvl(upper(ph.PO_NUMBER),'xx') like nvl(?,nvl(upper(ph.PO_NUMBER),'xx')  )
+
+
+getLtInvoiceHeadersCountByVendorId = select count(ih.INVOICE_HEADER_ID) \
+from LT_INVOICE_HEADERS  ih ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER_VALUES cmvs,LT_MAST_EMPLOYEES me ,LT_MAST_COMN_MASTER_VALUES cmvt \
+where cmvs.value_code(+) = ih.status \
+AND me.EMPLOYEE_ID(+) = ih.BUYER_ID \
+AND cmvt.value_code(+) = me.TITLE \
+AND cmv.value_code(+) = ih.INVOICE_TYPE \
+AND ih.VENDOR_ID = ? \
+AND nvl(upper(ih.INVOICE_TYPE),'xx') like nvl(?,nvl(upper(ih.INVOICE_TYPE),'xx'))  \
+AND nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx') like nvl(?,nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx')) \
+AND nvl(upper(ih.INVOICE_NUM),'xx') like nvl(?,nvl(upper(ih.INVOICE_NUM),'xx'))  \
+AND  TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY'))  \
+AND nvl(upper(ih.DESCRIPTION),'xx') like nvl(?,nvl(upper(ih.DESCRIPTION),'xx'))  \
+AND nvl(ih.INVOICE_AMOUNT,-99) like nvl( ?, nvl(ih.INVOICE_AMOUNT,-99))  \
+AND nvl(ih.AMOUNT_PAID,-99) like nvl( ?, nvl(ih.AMOUNT_PAID,-99))  \
+AND upper(cmvs.value_name) like nvl(?,upper(cmvs.value_name))
+
+getLtInvoiceHeadersDataTableByVendorId = select  *  from (SELECT a.*,ROWNUM RNUM from ( select  \
+ih.INVOICE_HEADER_ID, cmv.value_name as INVOICE_TYPE,ih.INTERNAL_INVOICE_NUMBER,ih.INVOICE_NUM, \
+ih.INVOICE_DATE,ih.INVOICE_RECEIVED_DATE,ih.PO_HEADER_ID,ih.BUYER_ID,ih.VENDOR_ID,ih.VENDOR_ADD_ID,\
+ih.DESCRIPTION,ih.INVOICE_AMOUNT,ih.BILLING_ADD_ID,ih.SHIPPING_ADD_ID,cmvs.value_name as STATUS,ih.AMOUNT_PAID,\
+ih.VOUCHER_NUM,ih.VOUCHER_DATE,ih.INVOICE_CURRENCY,ih.SOURCE,ih.SOURCE_REF_NO,\
+nvl2(me.EMPLOYEE_ID,( cmvt.value_name||' ' || me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ),'') AS buyer \
+,po.PO_NUMBER \
+from LT_INVOICE_HEADERS  ih ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER_VALUES cmvs, \
+LT_MAST_EMPLOYEES me ,LT_MAST_COMN_MASTER_VALUES cmvt,lt_po_headers po \
+where cmvs.value_code(+) = ih.status \
+AND me.EMPLOYEE_ID(+) = ih.BUYER_ID \
+AND cmvt.value_code(+) = me.TITLE \
+AND cmv.value_code(+) = ih.INVOICE_TYPE \
+AND ih.VENDOR_ID = ? \
+AND ih.PO_HEADER_ID = po.PO_HEADER_ID(+) \
+AND nvl(upper(ih.INVOICE_TYPE),'xx') like nvl(?,nvl(upper(ih.INVOICE_TYPE),'xx'))  \
+AND nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx') like nvl(?,nvl(upper(ih.INTERNAL_INVOICE_NUMBER),'xx')) \
+AND nvl(upper(ih.INVOICE_NUM),'xx') like nvl(?,nvl(upper(ih.INVOICE_NUM),'xx'))  \
+AND  TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY'))  \
+AND nvl(upper(ih.DESCRIPTION),'xx') like nvl(?,nvl(upper(ih.DESCRIPTION),'xx'))  \
+AND nvl(ih.INVOICE_AMOUNT,-99) like nvl( ?, nvl(ih.INVOICE_AMOUNT,-99))  \
+AND nvl(ih.AMOUNT_PAID,-99) like nvl( ?, nvl(ih.AMOUNT_PAID,-99))  \
+AND upper(cmvs.value_name) like nvl(?,upper(cmvs.value_name))  \
+order by \
+CASE WHEN 2 = ? then upper(ih.INVOICE_TYPE) END asc, \
+CASE WHEN 12 = ? then upper(ih.INVOICE_TYPE) END desc, \
+CASE WHEN 3 = ? then upper(ih.INTERNAL_INVOICE_NUMBER) END asc, \
+CASE WHEN 13 = ? then upper(ih.INTERNAL_INVOICE_NUMBER) END desc, \
+CASE WHEN 4 = ? then upper(ih.INVOICE_NUM) END asc, \
+CASE WHEN 14 = ? then upper(ih.INVOICE_NUM) END desc, \
+CASE WHEN 5 = ? then ih.INVOICE_DATE END asc, \
+CASE WHEN 15 = ? then ih.INVOICE_DATE END desc, \
+CASE WHEN 6 = ? then upper(ih.DESCRIPTION) END asc, \
+CASE WHEN 16 = ? then (ih.DESCRIPTION) END desc, \
+CASE WHEN 7 = ? then ih.INVOICE_AMOUNT END asc, \
+CASE WHEN 17 = ? then ih.INVOICE_AMOUNT END desc, \
+CASE WHEN 9 = ? then ih.AMOUNT_PAID END asc, \
+CASE WHEN 19 = ? then ih.AMOUNT_PAID END desc, \
+CASE WHEN 8 = ? then upper(cmvs.value_name) END asc, \
+CASE WHEN 18 = ? then upper(cmvs.value_name) END desc,\
+CASE WHEN 1 = ? then ih.last_update_date END desc, \
+CASE WHEN 11 = ? then ih.last_update_date END asc)a  where ROWNUM <=?) WHERE rnum >=?
+
+
+getCountAndStatusByVendorId =  SELECT COUNT(ih.INVOICE_HEADER_ID) as COUNT,ih.STATUS as STATUS \
+FROM LT_INVOICE_HEADERS ih WHERE ih.VENDOR_ID = ?  GROUP BY ih.STATUS
+
+getInvoiceAmtByUserId = SELECT SUM(ih.INVOICE_AMOUNT) INVOICE_AMOUNT  FROM LT_INVOICE_HEADERS ih WHERE ih.CREATED_BY = ?
+
+
+getAllInvoice = SELECT * FROM LT_INVOICE_HEADERS
+
+
+getAllInvoiceByInitiator = SELECT * FROM LT_INVOICE_HEADERS WHERE INITIATOR_ID = ?
+
+getInvoiceById = SELECT ih.INVOICE_HEADER_ID,ih.INTERNAL_INVOICE_NUMBER,ih.INVOICE_NUM,ih.INVOICE_DATE,ih.STATUS,ih.INVOICE_TYPE , \
+ih.INVOICE_RECEIVED_DATE,ih.PO_HEADER_ID,ih.BUYER_ID,ih.VENDOR_ID,ih.VENDOR_ADD_ID,ih.DESCRIPTION,ih.INVOICE_AMOUNT,  \
+ih.BILLING_ADD_ID,ih.SHIPPING_ADD_ID,ih.AMOUNT_PAID,ih.VOUCHER_NUM,ih.VOUCHER_DATE,ih.INVOICE_CURRENCY,ih.SOURCE,ph.PO_AMOUNT,  \
+ih.SOURCE_REF_NO,ih.CREATED_BY,ih.CREATION_DATE,ih.LAST_UPDATE_LOGIN,ih.EXCHANGE_RATE,ih.BASE_AMOUNT, ih.PAYTERM_ID, \
+pt.TERM_NAME,ih.INITIATOR_ID,cmv.value_name as TYPE, vm.VENDOR_NAME||' ( '||vm.VENDOR_CODE||' )' as VENDOR_NAME, \
+cmvs.value_name as INVOICE_STATUS  ,nvl2(d.DIVISION_NAME,d.DIVISION_NAME||' ( '||d.DIVISION_CODE||' )','')  as DIVISION_NAME, \
+nvl2(me.EMPLOYEE_ID,( cmvt.value_name||' ' || me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ),'') AS buyer , \
+DECODE(mu.VENDOR_ID , null, nvl2(mei.EMPLOYEE_ID,( cmvt.value_name||' ' || mei.first_name || ' '|| mei.LAST_NAME||' ' || '(' ||mei.EMPLOYEE_NUMBER||')' ),''), \
+mv.VENDOR_NAME||' ( '||mv.VENDOR_CODE||' )') AS initiator_name,ph.PO_NUMBER \
+FROM LT_INVOICE_HEADERS ih,LT_MAST_VENDORS vm, LT_MAST_COMN_MASTER_VALUES cmv, LT_MAST_COMN_MASTER_VALUES cmvs, LT_MAST_DIVISIONS d ,  \
+LT_MAST_EMPLOYEES me, LT_MAST_COMN_MASTER_VALUES cmvt  , LT_MAST_EMPLOYEES mei, LT_MAST_USERS mu, LT_MAST_VENDORS mv , \
+LT_MAST_PAYMENT_TERMS pt,LT_PO_HEADERS ph  \
+WHERE ih.INVOICE_HEADER_ID = ?   \
+AND ih.VENDOR_ID = vm.VENDOR_ID(+)  AND ih.PAYTERM_ID = pt.PAYTERM_ID(+) AND  ih.CREATED_BY = mu.USER_ID(+)   \
+AND cmv.value_code(+) = ih.INVOICE_TYPE  \
+AND me.title = cmvt.value_code(+)   \
+AND me.EMPLOYEE_ID(+) = ih.BUYER_ID   \
+AND mei.EMPLOYEE_ID(+) = ih.INITIATOR_ID  AND cmvs.value_code(+) = ih.STATUS AND ih.PO_HEADER_ID = ph.PO_HEADER_ID(+) \
+AND mu.VENDOR_ID  = mv.VENDOR_ID(+) AND ih.DIVISION_ID = d.DIVISION_ID(+)
+
+
+getByInvoiceNumber = SELECT * FROM LT_INVOICE_HEADERS WHERE UPPER(INVOICE_NUM) = ?
+
+getByInvNumVendAndAddr = SELECT * FROM LT_INVOICE_HEADERS WHERE UPPER(INVOICE_NUM) = ? AND VENDOR_ID = ? AND VENDOR_ADD_ID = ?
+
+deleteInvoiceHeaderById = DELETE FROM LT_INVOICE_HEADERS WHERE INVOICE_HEADER_ID = ?

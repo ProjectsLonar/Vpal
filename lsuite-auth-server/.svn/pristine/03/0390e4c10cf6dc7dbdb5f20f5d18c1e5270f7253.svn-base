@@ -1,0 +1,28 @@
+getAllVendorsContact = SELECT * FROM LT_MAST_VENDOR_CONTACTS v 
+
+
+getVendorContactByAddressIdAndVendorId = SELECT * FROM LT_MAST_VENDOR_CONTACTS v WHERE v.VENDOR_ADD_ID = ? AND v.VENDOR_ID=?
+
+
+getVendorContactByContactId = SELECT * FROM LT_MAST_VENDOR_CONTACTS v WHERE v.VENDOR_CONTACT_ID = ?
+
+
+saveVendorContacts = INSERT INTO LT_MAST_VENDOR_CONTACTS (VENDOR_CONTACT_ID,VENDOR_ID,VENDOR_ADD_ID,CONTACT_PERSON, \
+									CONTACT_MOBILE, CONTACT_EMAIL, CONTACT_TEL, CONTACT_EXT, CONTACT_FAX,Start_Date, \
+									End_Date, Created_by, Creation_date, Last_update_login, Last_updated_by,Last_update_date ) \
+     								VALUES(LT_MAST_VENDOR_CONTACTS_S.nextval,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+     								
+     								
+updateVendorContacts = UPDATE LT_MAST_VENDOR_CONTACTS SET VENDOR_ID=?,VENDOR_ADD_ID=?,CONTACT_PERSON=?, \
+								 CONTACT_MOBILE=?, CONTACT_EMAIL=?, CONTACT_TEL=?, CONTACT_EXT=?, CONTACT_FAX=?, \
+								 Start_Date=?,End_Date=?, Created_by=?, Creation_date=?, Last_update_login=?, \
+								 Last_updated_by=?,Last_update_date=? \
+								 WHERE VENDOR_CONTACT_ID=?     	
+								 
+deleteVendorContacts = DELETE FROM LT_MAST_VENDOR_CONTACTS WHERE VENDOR_CONTACT_ID = ?
+
+
+getVendorContactByVendorId = SELECT * FROM LT_MAST_VENDOR_CONTACTS v WHERE  v.VENDOR_ID=?	
+
+
+deleteByVendorIdVendorContacts =  DELETE FROM LT_MAST_VENDOR_CONTACTS WHERE VENDOR_ID = ?							 							

@@ -1,0 +1,323 @@
+getAllPoHeaders =  SELECT * FROM lt_po_headers l
+
+getAllActivePoHeaders=SELECT * FROM lt_po_headers l
+
+getPoHeaderById = SELECT ph.* , \
+vm.VENDOR_NAME||' ( '||vm.VENDOR_CODE||' )' as VENDOR_NAME, \
+va.ADDRESS_1||' '||va.ADDRESS_2||' '||va.ADDRESS_3||' ,'||va.CITY||', '||sm.STATE_NAME||', '|| \
+lt_vpal_common_pkg.get_comn_value_name('COUNTRY_MASTER', va.COUNTRY)  AS VENDOR_ADDR, \
+bm.BRANCH_NAME||' ( '||bm.BRANCH_CODE||' ),'||bm.CITY||', '||smm.STATE_NAME||', '|| \
+lt_vpal_common_pkg.get_comn_value_name('COUNTRY_MASTER', bm.COUNTRY) AS BILLING_ADDR \
+FROM lt_po_headers ph ,LT_MAST_VENDORS vm ,LT_MAST_VENDOR_ADDRESSES va ,LT_MAST_STATES sm , \
+LT_MAST_BRANCHES bm,LT_MAST_STATES smm   \
+WHERE ph.PO_HEADER_ID = ? \
+AND ph.VENDOR_ID = vm.VENDOR_ID(+) \
+AND ph.VENDOR_ADD_ID = va.VENDOR_ADD_ID(+) \
+AND va.STATE_ID = sm.STATE_ID(+) \
+AND ph.BILLING_ADD_ID = bm.BRANCH_ID(+) \
+AND bm.STATE_ID = smm.STATE_ID(+)
+
+
+getLtPoHeaderDataTable = select  *  from \
+(SELECT a.*,ROWNUM RNUM from(select ph.PO_HEADER_ID,nvl2(ph.ACK_FLAG,'YES','NO') ACK_FLAG, \
+ph.PARENT_PO_HEADER_ID,ph.PO_TYPE,ph.PO_NUMBER,ph.INTERNAL_PO_NUMBER, \
+ph.REVISION_NUM,ph.PO_DATE,ph.REVISION_DATE,ph.VENDOR_ID,ph.VENDOR_ADD_ID,ph.VENDOR_CONTACT_ID,ph.BILLING_ADD_ID, \
+ph.DESCRIPTION,ph.NOTE_TO_APPROVER,ph.PO_AMOUNT,ph.DIVISION_ID,ph.SUB_DIVISION_ID,ph.BUYER_ID,ph.SOURCE,ph.SOURCE_REF_NO, \
+ph.TERMS_ID,ph.TERMS_DATE,ph.CURRENCY_CODE,cmv.value_name as STATUS,ba.BILLING_ADDRESS, ph.PO_PDF ,\
+nvl2(me.EMPLOYEE_ID,( me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ),'') AS agent   \
+from LT_PO_HEADERS  ph ,LT_MAST_BILLING_ADDRESSES ba,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER cms, \
+LT_MAST_EMPLOYEES me  \
+where ph.COMPANY_ID = ? AND ph.BILLING_ADD_ID = ba.BILLING_ADDRESS_ID(+)  \
+AND cmv.value_code(+) = ph.STATUS AND cmv.MASTER_ID = cms.MASTER_ID(+) AND cms.MASTER_NAME = 'PO_STATUS' \
+AND me.EMPLOYEE_ID(+) = ph.BUYER_ID \
+AND nvl(upper(ph.PO_TYPE),'xx') like nvl(?,nvl(upper(ph.PO_TYPE),'xx'))  \
+AND nvl(upper(ph.PO_NUMBER),'xx') like nvl(?,nvl(upper(ph.PO_NUMBER),'xx')) \
+AND nvl(upper(ph.REVISION_NUM),'xx') like nvl(?,nvl(upper(ph.REVISION_NUM),'xx'))  \
+AND TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY')) \
+AND upper(cmv.value_name) like nvl(?,upper(cmv.value_name))   \
+AND nvl(ph.PO_AMOUNT,-99) like nvl( ?, nvl(ph.PO_AMOUNT,-99))  \
+AND  UPPER( me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ) \
+LIKE UPPER(NVL(?, (  me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ))) \
+AND upper(ph.CURRENCY_CODE) like nvl(?,upper(ph.CURRENCY_CODE)) \
+AND upper(nvl2(ph.ack_flag,'YES', 'NO')) like nvl(?,upper(nvl2(ph.ack_flag,'YES', 'NO'))) \
+order by \
+CASE WHEN 2 = ? then upper(ph.PO_TYPE) END asc, \
+CASE WHEN 22 = ? then upper(ph.PO_TYPE) END desc, \
+CASE WHEN 3 = ? then upper(ph.PO_NUMBER) END asc, \
+CASE WHEN 23 = ? then upper(ph.PO_NUMBER) END desc, \
+CASE WHEN 5 = ? then upper(ph.REVISION_NUM) END asc, \
+CASE WHEN 25 = ? then upper(ph.REVISION_NUM) END desc, \
+CASE WHEN 4 = ? then ph.PO_DATE END asc, \
+CASE WHEN 24 = ? then ph.PO_DATE END desc, \
+CASE WHEN 9 = ? then upper(cmv.value_name) END asc, \
+CASE WHEN 29 = ? then upper(cmv.value_name) END desc, \
+CASE WHEN 8 = ? then ph.PO_AMOUNT END asc, \
+CASE WHEN 28 = ? then ph.PO_AMOUNT END desc, \
+CASE WHEN 6 = ? then agent END asc, \
+CASE WHEN 26 = ? then agent END desc, \
+CASE WHEN 7 = ? then upper(ph.CURRENCY_CODE) END asc, \
+CASE WHEN 27 = ? then upper(ph.CURRENCY_CODE) END desc, \
+CASE WHEN 10 = ? then nvl2(ph.ack_flag,'YES', 'NO') END asc, \
+CASE WHEN 30 = ? then nvl2(ph.ack_flag,'YES', 'NO') END desc, \
+CASE WHEN 1 = ? then ph.last_update_date END desc, \
+CASE WHEN 21 = ? then ph.last_update_date END asc)a  where ROWNUM <=? ) WHERE rnum >=?
+
+
+getLtPoHeaderCount = select count(ph.PO_HEADER_ID)  \
+from LT_PO_HEADERS  ph ,LT_MAST_BILLING_ADDRESSES ba,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER cms, \
+LT_MAST_EMPLOYEES me  \
+where ph.COMPANY_ID = ? AND ph.BILLING_ADD_ID = ba.BILLING_ADDRESS_ID(+)  \
+AND cmv.value_code(+) = ph.STATUS AND cmv.MASTER_ID = cms.MASTER_ID(+) AND cms.MASTER_NAME = 'PO_STATUS' \
+AND me.EMPLOYEE_ID(+) = ph.BUYER_ID \
+AND nvl(upper(ph.PO_TYPE),'xx') like nvl(?,nvl(upper(ph.PO_TYPE),'xx'))  \
+AND nvl(upper(ph.PO_NUMBER),'xx') like nvl(?,nvl(upper(ph.PO_NUMBER),'xx')) \
+AND nvl(upper(ph.REVISION_NUM),'xx') like nvl(?,nvl(upper(ph.REVISION_NUM),'xx'))  \
+AND TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY')) \
+AND upper(cmv.value_name) like nvl(?,upper(cmv.value_name))   \
+AND nvl(ph.PO_AMOUNT,-99) like nvl( ?, nvl(ph.PO_AMOUNT,-99))  \
+AND  UPPER( me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ) \
+LIKE UPPER(NVL(?, (  me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ))) \
+AND upper(ph.CURRENCY_CODE) like nvl(?,upper(ph.CURRENCY_CODE)) \
+AND upper(nvl2(ph.ack_flag,'YES', 'NO')) like nvl(?,upper(nvl2(ph.ack_flag,'YES', 'NO')))
+
+getLtPoHeaderCountByVendorId = select count(ph.PO_HEADER_ID)  \
+from LT_PO_HEADERS  ph ,LT_MAST_BILLING_ADDRESSES ba,\
+LT_MAST_COMN_MASTER_VALUES cmvs,LT_MAST_COMN_MASTER cms,LT_MAST_EMPLOYEES me \
+where ph.BILLING_ADD_ID = ba.BILLING_ADDRESS_ID(+)  \
+AND cmvs.value_code(+) = ph.STATUS AND cmvs.MASTER_ID = cms.MASTER_ID(+) AND cms.MASTER_NAME = 'PO_STATUS' \
+AND me.EMPLOYEE_ID(+) = ph.BUYER_ID \
+AND ph.VENDOR_ID = ? \
+AND nvl(upper(ph.PO_TYPE),'xx') like nvl(?,nvl(upper(ph.PO_TYPE),'xx'))  \
+AND nvl(upper(ph.PO_NUMBER),'xx') like nvl(?,nvl(upper(ph.PO_NUMBER),'xx'))  \
+AND nvl(upper(ph.REVISION_NUM),'xx') like nvl(?,nvl(upper(ph.REVISION_NUM),'xx'))  \
+AND  TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY')) \
+AND upper(cmvs.value_name) like nvl(?,upper(cmvs.value_name))   \
+AND nvl(ph.PO_AMOUNT,-99) like nvl( ?,nvl(ph.PO_AMOUNT,-99))  \
+AND  UPPER(  me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ) \
+LIKE UPPER(NVL(?, (  me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ))) \
+AND nvl(upper(ph.CURRENCY_CODE),'xx') like nvl(?,nvl(upper(ph.CURRENCY_CODE),'xx'))
+
+
+getLtPoHeadersDataTableByVendorId = select  *  from \
+(SELECT a.*,ROWNUM RNUM from(select ph.PO_HEADER_ID,nvl2(ph.ACK_FLAG,'YES','NO') ACK_FLAG, \
+ph.PARENT_PO_HEADER_ID,ph.PO_TYPE,ph.PO_NUMBER,ph.INTERNAL_PO_NUMBER, \
+ph.REVISION_NUM,ph.PO_DATE,ph.REVISION_DATE,ph.VENDOR_ID,ph.VENDOR_ADD_ID,ph.VENDOR_CONTACT_ID,ph.BILLING_ADD_ID, \
+ph.DESCRIPTION,ph.NOTE_TO_APPROVER,ph.PO_AMOUNT,ph.DIVISION_ID,ph.SUB_DIVISION_ID,ph.BUYER_ID,ph.SOURCE,ph.SOURCE_REF_NO, \
+ph.TERMS_ID,ph.TERMS_DATE,ph.CURRENCY_CODE,cmvs.value_name as STATUS,ba.BILLING_ADDRESS, \
+nvl2(me.EMPLOYEE_ID,(  me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ),'') AS agent   \
+from LT_PO_HEADERS  ph ,LT_MAST_BILLING_ADDRESSES ba,\
+LT_MAST_COMN_MASTER_VALUES cmvs,LT_MAST_COMN_MASTER cms,LT_MAST_EMPLOYEES me \
+where ph.BILLING_ADD_ID = ba.BILLING_ADDRESS_ID(+)  \
+AND cmvs.value_code(+) = ph.STATUS AND cmvs.MASTER_ID = cms.MASTER_ID(+) AND cms.MASTER_NAME = 'PO_STATUS' \
+AND me.EMPLOYEE_ID(+) = ph.BUYER_ID \
+AND ph.VENDOR_ID = ? \
+AND nvl(upper(ph.PO_TYPE),'xx') like nvl(?,nvl(upper(ph.PO_TYPE),'xx'))  \
+AND nvl(upper(ph.PO_NUMBER),'xx') like nvl(?,nvl(upper(ph.PO_NUMBER),'xx'))  \
+AND nvl(upper(ph.REVISION_NUM),'xx') like nvl(?,nvl(upper(ph.REVISION_NUM),'xx'))  \
+AND  TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ph.PO_DATE, SYSDATE ),'DD-MM-YYYY')) \
+AND upper(cmvs.value_name) like nvl(?,upper(cmvs.value_name))   \
+AND nvl(ph.PO_AMOUNT,-99) like nvl( ?,nvl(ph.PO_AMOUNT,-99))  \
+AND  UPPER(  me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ) \
+LIKE UPPER(NVL(?, (  me.first_name || ' '|| me.LAST_NAME||' ' || '(' ||me.EMPLOYEE_NUMBER||')' ))) \
+AND nvl(upper(ph.CURRENCY_CODE),'xx') like nvl(?,nvl(upper(ph.CURRENCY_CODE),'xx')) \
+order by \
+CASE WHEN 2 = ? then upper(ph.PO_TYPE) END asc, \
+CASE WHEN 22 = ? then upper(ph.PO_TYPE) END desc, \
+CASE WHEN 3 = ? then upper(ph.PO_NUMBER) END asc, \
+CASE WHEN 23 = ? then upper(ph.PO_NUMBER) END desc, \
+CASE WHEN 5 = ? then upper(ph.REVISION_NUM) END asc, \
+CASE WHEN 25 = ? then upper(ph.REVISION_NUM) END desc, \
+CASE WHEN 4 = ? then ph.PO_DATE END asc, \
+CASE WHEN 24 = ? then ph.PO_DATE END desc, \
+CASE WHEN 9 = ? then upper(cmvs.value_name) END asc, \
+CASE WHEN 29 = ? then upper(cmvs.value_name) END desc, \
+CASE WHEN 8 = ? then ph.PO_AMOUNT END asc, \
+CASE WHEN 28 = ? then ph.PO_AMOUNT END desc, \
+CASE WHEN 6 = ? then UPPER(agent) END asc, \
+CASE WHEN 26 = ? then UPPER(agent) END desc, \
+CASE WHEN 7 = ? then upper(ph.CURRENCY_CODE) END asc, \
+CASE WHEN 27 = ? then upper(ph.CURRENCY_CODE) END desc, \
+CASE WHEN 10 = ? then nvl2(ph.ack_flag,'YES', 'NO') END asc, \
+CASE WHEN 30 = ? then nvl2(ph.ack_flag,'YES', 'NO') END desc, \
+CASE WHEN 1 = ? then ph.last_update_date END desc, \
+CASE WHEN 21 = ? then ph.last_update_date END asc)a  where ROWNUM <=? ) WHERE rnum >=?
+
+
+getAmountByVendorId_OLD_6_2_19 =   SELECT nvl2(SUM(ph.PO_AMOUNT),SUM(ph.PO_AMOUNT),0) as PO_AMOUNT, \
+nvl2(SUM(ih.INVOICE_AMOUNT),SUM(ih.INVOICE_AMOUNT),0) as INVOICE_AMOUNT,  \
+nvl2(SUM(ih.AMOUNT_PAID),SUM(ih.AMOUNT_PAID),0) as AMOUNT_PAID   \
+FROM LT_PO_HEADERS ph ,LT_AP_INVOICE_HEADERS ih   \
+WHERE ph.STATUS  = 'APPROVED'   \
+AND ih.STATUS = 'APPROVED'  AND ph.VENDOR_ID = ?
+
+
+
+getAmountByVendorId = SELECT  \
+DECODE(ih.STATUS, 'APPROVED', SUM(ih.INVOICE_AMOUNT),0) INVOICE_AMOUNT,ih.VENDOR_ID, \
+DECODE(ph.STATUS, 'APPROVED', SUM(ph.PO_AMOUNT), 0) PO_AMOUNT,ph.VENDOR_ID,  \
+DECODE(ih.STATUS, 'APPROVED', SUM(ih.AMOUNT_PAID),0) AMOUNT_PAID,ih.VENDOR_ID    \
+FROM LT_INVOICE_HEADERS ih,LT_PO_HEADERS ph   \
+WHERE ih.VENDOR_ID = ? AND ph.VENDOR_ID=ih.VENDOR_ID \
+group by ph.STATUS ,ih.STATUS,ph.VENDOR_ID,ih.VENDOR_ID
+
+
+cha = having ph.VENDOR_ID = ih.VENDOR_ID AND ih.VENDOR_ID = ?
+
+
+getCountAndStatusByVendorId =  SELECT COUNT(ph.PO_HEADER_ID) as COUNT,ph.STATUS as STATUS \
+FROM LT_PO_HEADERS ph WHERE ph.VENDOR_ID = ?  GROUP BY ph.STATUS
+
+getTopFivePoById =   SELECT * FROM (   select PO_HEADER_ID,VENDOR_ID,PO_TYPE,PO_NUMBER,PO_DATE, PO_AMOUNT,ROWNUM  \
+FROM LT_PO_HEADERS  WHERE VENDOR_ID = ? ORDER BY LAST_UPDATE_DATE DESC ) WHERE ROWNUM <= 5
+
+getCountAndStatusByBuyerId_12-3-2019 =   select COUNT(ved.VENDOR_ID) as COUNT,cmv.value_name as STATUS \
+from LT_MAST_VENDORS ved , lt_mast_comn_master_values cmv  \
+WHERE ved.INITIATOR_ID = ?  \
+AND ved.STATUS = cmv.value_code(+) GROUP BY cmv.value_name
+
+
+getCountAndStatusByBuyerId = select COUNT(ved.VENDOR_ID) as COUNT, \
+lt_vpal_common_pkg.get_comn_value_name('VENDOR_STATUS', ved.STATUS) as STATUS  \
+from LT_MAST_VENDORS ved   \
+WHERE ved.INITIATOR_ID = nvl(?,nvl( ved.INITIATOR_ID , -99) ) AND ved.COMPANY_ID = ? GROUP BY STATUS
+
+
+getVendorMesaageByBuyerId =  select  com.VENDOR_ID, com.VENDOR_MSG,  ved.VENDOR_NAME, com.CREATION_DATE from  \
+		  LT_MAST_COMMUNICATION com   \
+		  , LT_MAST_VENDORS ved \
+		  , LT_MAST_EMPLOYEES emp  \
+		  where com.BUYER_ID = ? \
+		  AND ved.INITIATOR_ID = emp.EMPLOYEE_ID \
+		  AND com.VENDOR_ID = ved.VENDOR_ID(+)  \
+		  and  com.CREATION_DATE = ( select MAX(CREATION_DATE)from LT_MAST_COMMUNICATION \
+		  where BUYER_ID = com.BUYER_ID AND com.VENDOR_ID = VENDOR_ID and VENDOR_MSG  \
+		  IS NOT NULL  GROUP BY VENDOR_ID)order by com.CREATION_DATE DESC 
+
+getQtrCountAndStatusByBuyerIdANdYearWise = Select TO_CHAR(CREATION_DATE, 'Q') AS qtr ,TO_CHAR(CREATION_DATE, 'yyyy') as Year, \
+	COUNT(ved.VENDOR_ID) as COUNT, \
+	ved.STATUS as STATUS \
+	from LT_MAST_VENDORS ved \
+	WHERE ved.INITIATOR_ID = ? \
+	AND TO_char(CREATION_DATE,'YYYY') = ? \
+	GROUP BY ved.STATUS,TO_CHAR(CREATION_DATE, 'Q'),TO_CHAR(CREATION_DATE, 'yyyy')
+	
+	
+acknowldgeLtPoHeaders = UPDATE LT_PO_HEADERS SET ACK_FLAG = ? ,ACK_MSG = ? WHERE PO_HEADER_ID = ?
+
+
+getActivePoHeadersByPoNumber_16-5-2019 = SELECT ph.* ,mv.VENDOR_NAME||' ( '||mv.VENDOR_CODE||' )' AS VENDOR_NAME, \
+( nvl(v.ADDRESS_1,'') || nvl2(v.ADDRESS_2,(','||v.ADDRESS_2),null)  || \
+nvl2(v.ADDRESS_3,(','||v.ADDRESS_3),null)||','||v.CITY||','||ms.STATE_NAME||','||cmv.value_name) as VENDOR_ADDRESS ,\
+( nvl(ba.BILLING_ADDRESS_CODE,null)  \
+||nvl2(ba.BILLING_ADDRESS,(','||ba.BILLING_ADDRESS),null)  \
+||nvl2(ba.BILLING_ADDRESS_STATE,(','||ba.BILLING_ADDRESS_STATE),null)  \
+) AS BILLING_ADDRESS \
+FROM LT_MAST_VENDOR_ADDRESSES v,LT_MAST_COMN_MASTER_VALUES cmv ,LT_MAST_STATES ms ,LT_PO_HEADERS ph,LT_MAST_VENDORS mv , \
+LT_MAST_BILLING_ADDRESSES ba \
+WHERE ph.PO_NUMBER LIKE ? AND ph.VENDOR_ADD_ID = v.VENDOR_ADD_ID(+)  \
+and ( v.COUNTRY = cmv.value_code(+) AND cmv.MASTER_ID = ( SELECT MASTER_ID FROM LT_MAST_COMN_MASTER WHERE MASTER_NAME = 'COUNTRY_MASTER' ) ) \
+AND ms.STATE_ID(+) = v.STATE_ID \
+AND ph.VENDOR_ID = mv.VENDOR_ID(+)	\
+AND ph.STATUS = 'APPROVED' \
+AND ph.BILLING_ADD_ID = ba.BILLING_ADDRESS_ID(+)
+
+
+
+getActivePoHeadersByPoNumber =  SELECT ph.* ,mv.VENDOR_NAME||' ( '||mv.VENDOR_CODE||' )' AS VENDOR_NAME, \
+( nvl(v.ADDRESS_1,'') || nvl2(v.ADDRESS_2,(','||v.ADDRESS_2),null) ) as vendor_address,\
+mb.BRANCH_NAME||' ( ' ||mb.BRANCH_CODE||' )' as billing_address ,\
+me.FIRST_NAME||' '||me.LAST_NAME||' ( '||me.EMPLOYEE_NUMBER||' )'  AS BUYER  \
+FROM LT_MAST_VENDOR_ADDRESSES v,LT_PO_HEADERS ph,LT_MAST_VENDORS mv ,LT_MAST_BRANCHES mb ,LT_MAST_EMPLOYEES me,LT_MAST_USERS um  \
+WHERE ph.PO_NUMBER LIKE ? \
+AND ph.VENDOR_ADD_ID = v.VENDOR_ADD_ID(+)  \
+AND ph.VENDOR_ID = mv.VENDOR_ID(+)	\
+AND ph.BILLING_ADD_ID = mb.BRANCH_ID(+) \
+AND ph.STATUS = 'APPROVED' \
+AND ph.BUYER_ID = me.EMPLOYEE_ID(+) \
+AND ph.COMPANY_ID = ? \
+AND ph.VENDOR_ID = nvl(um.VENDOR_ID,ph.VENDOR_ID) \
+AND um.USER_ID = ?
+
+
+
+
+ltPOReportQueryByPONumberAndCompanyId = SELECT 	poh.po_number as order_number  \
+		, poh.revision_num as revision  \
+		, poh.po_date as po_date  \
+		, poh.revision_date as rev_date  \
+		, venm.vendor_name as v_name  \
+		, venaddm.address_1 || venaddm.address_2||venaddm.address_3||', '||venaddm.city||', '||stmva.state_name||', '||venaddm.country as ven_add  \
+		, empm.first_name||' '||empm.last_name as  buyer  \
+		, empm.official_email as email  \
+		, NULL  as telephone  \
+		, NULL  as  auth_by \
+		, NULL as fax \
+		, brmst.BRANCH_NAME||', '||brmst.city||', '||stmst.state_name||', '||brmst.country||' ( '||brmst.BRANCH_CODE||' )'  as  ship_to  \
+		, brmst.gst_reg_no as gstinst  \
+		, brmbt.BRANCH_NAME||', '||brmbt.city||', '||stmbt.state_name||', '||brmbt.country||' ( '||brmbt.BRANCH_CODE||' )' as  bill_to  \
+		, brmbt.gst_reg_no as  gstinbt  \
+		, NULL as payment_terms  \
+		, NULL as payment_method  \
+		, poh.currency_code as  currency  \
+		, NULL as  freight_terms  \
+		, NULL as  fob  \
+		, NULL as  carriers  \
+		, pol.line_num as  line_no  \
+		, pos.shipment_num as ship_num  \
+		, pol.product_code as item  \
+		, pol.product_description as  item_desc  \
+		, pos.due_date as  delivery  \
+		, pos.quantity_ordered as  quantity  \
+		, pos.uom as  uom  \
+		, pol.unit_price as unit_price  \
+		, pos.quantity_ordered * pol.unit_price as sub_amount  \
+		, 1 as linec  \
+		, 'CGST 9%' as tax_name_and_descc  \
+		, 9 as ratec  \
+		, (pos.quantity_ordered * pol.unit_price) * (9/100) as taxc  \
+		, 2 as LINES   \
+		, 'SGST 9%' as  tax_name_and_descs  \
+		, 9 as rates   \
+		, (pos.quantity_ordered * pol.unit_price) * (9/100) as taxs   \
+		, ((pos.quantity_ordered * pol.unit_price) * (9/100)) * 2 as total_taxes  \
+		, (pos.quantity_ordered * pol.unit_price) + (((pos.quantity_ordered * pol.unit_price) * (9/100)) * 2) as amount   \
+		, (SELECT SUM((pos1.quantity_ordered * pol1.unit_price) + (((pos1.quantity_ordered * pol1.unit_price) * (9/100)) * 2))  \
+			FROM lt_po_lines pol1, lt_po_shipments pos1  \
+			WHERE pol1.po_line_id = pos1.po_line_id    \
+			AND   pol1.po_header_id = poh.po_header_id  \
+			AND   pos1.po_header_id = poh.po_header_id  \
+			) as total_amount  \
+		, vencm.company_name as company_name  \
+FROM	lt_po_headers poh    \
+		, lt_mast_vendors venm   \
+		, lt_mast_vendor_addresses venaddm  \
+		, lt_mast_states stmva   \
+		, lt_mast_employees empm  \
+		, lt_po_shipments pos   \
+		, lt_mast_branches brmst  \
+		, lt_mast_states stmst    \
+		, lt_mast_branches brmbt  \
+		, lt_mast_states stmbt    \
+		, lt_po_lines pol  \
+		, lt_vend_company_master vencm  \
+WHERE 						\
+		poh.po_header_id  = ?		\
+AND     poh.vendor_id = venm.vendor_id(+)  \
+AND     poh.vendor_add_id = venaddm.vendor_add_id(+)  \
+AND		venaddm.state_id = stmva.state_id(+)   \
+AND     poh.buyer_id = empm.employee_id(+)    \
+AND 	poh.po_header_id = pos.po_header_id(+)  \
+AND 	pos.branch_id = brmst.branch_id(+)      \
+AND		brmst.state_id = stmst.state_id(+)      \
+AND     poh.billing_add_id = brmbt.branch_id(+)  \
+AND		brmbt.state_id = stmbt.state_id(+)     \
+AND     poh.po_header_id = pol.po_header_id(+)  \
+AND		pol.po_line_id = pos.po_line_id(+)   \
+AND     vencm.company_id(+) = poh.company_id \
+ORDER BY pol.line_num, pos.shipment_num
+
+ 
+
+
+
+

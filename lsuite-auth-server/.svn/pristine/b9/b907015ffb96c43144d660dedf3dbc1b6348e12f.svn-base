@@ -1,0 +1,34 @@
+getAllVendorHsnSacCodes = SELECT * FROM LT_MAST_VENDOR_HSN_SAC_CODES v
+
+
+getByVendorIdAndAddrIdVendorHsnSacCodes = SELECT * FROM LT_MAST_VENDOR_HSN_SAC_CODES v \
+														WHERE v.VENDOR_ID = ? \
+														AND v.VENDOR_ADD_ID=?
+
+
+getByHsnIdVendorHsnSacCodes = SELECT * FROM LT_MAST_VENDOR_HSN_SAC_CODES v WHERE v.VENDOR_HSN_ID = ?
+
+
+saveVendorHsnSacCodes = INSERT INTO LT_MAST_VENDOR_HSN_SAC_CODES (VENDOR_HSN_ID,VENDOR_ID,VENDOR_ADD_ID, \
+									HSN_SAC_CODE, START_DATE, END_DATE, CREATED_BY, CREATION_DATE, \
+									LAST_UPDATE_LOGIN, LAST_UPDATED_BY, LAST_UPDATE_DATE ) \
+     								VALUES(LT_MAST_VENDOR_HSN_SAC_CODES_S.nextval,?,?,?,?,?,?,?,?,?,?)
+     								
+     								
+updateVendorHsnSacCodes = UPDATE LT_MAST_VENDOR_HSN_SAC_CODES SET VENDOR_ID=?,VENDOR_ADD_ID=?, \
+									HSN_SAC_CODE=?, START_DATE=?, END_DATE=?, CREATED_BY=?,CREATION_DATE=?, \
+									LAST_UPDATE_LOGIN=?, LAST_UPDATED_BY=?, LAST_UPDATE_DATE=? \
+									WHERE VENDOR_HSN_ID=?
+									
+									
+deleteVendorHsnSacCodes =  DELETE FROM LT_MAST_VENDOR_HSN_SAC_CODES WHERE VENDOR_HSN_ID = ?  
+
+
+getVendorHsnBCodesVendorId = SELECT * FROM LT_MAST_VENDOR_HSN_SAC_CODES v WHERE v.VENDOR_ID = ?	
+
+
+
+deleteByvendorIdVendorHsnBCodes = DELETE FROM LT_MAST_VENDOR_HSN_SAC_CODES WHERE VENDOR_ID = ?		
+
+
+checkforDuplicateVendorHsnBCodes = SELECT * FROM LT_MAST_VENDOR_HSN_SAC_CODES v WHERE v.HSN_SAC_CODE = ?					

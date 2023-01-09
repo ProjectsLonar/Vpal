@@ -1,0 +1,74 @@
+findAllLtMastCarModels = SELECT * FROM LT_MAST_CAR_MODELS
+
+findAllActiveLtMastCarModels = SELECT cm.CAR_MODEL_ID,(cm.CAR_MODEL||' '||'('||' '||cm.CAR_MAKE||' '||')') AS CAR_MODEL,\
+cm.CAR_CC,cm.CAR_INFO,cm.STATUS,cm.START_DATE,cm.END_DATE \
+FROM LT_MAST_CAR_MODELS cm \
+WHERE  (cm.status = 'Active' OR cm.status = 'ACTIVE') \
+AND cm.START_DATE <= SYSDATE \
+AND (cm.END_DATE IS NULL OR cm.END_DATE >= SYSDATE)
+
+getLtMastCarModelsByID = SELECT * FROM LT_MAST_CAR_MODELS cm \
+WHERE cm.CAR_MODEL_ID = ?
+
+findActiveLikeCarName = SELECT * FROM LT_MAST_CAR_MODELS cm \
+WHERE upper(cm.CAR_MODEL) like ?\
+(cm.status = 'Active' OR cm.status = 'ACTIVE') \
+AND cm.START_DATE <= SYSDATE \
+AND (cm.END_DATE IS NULL OR cm.END_DATE >= SYSDATE)
+
+getCarModelsDataTable = select  *  from \
+( select a.*,rownum rnum from \
+( select cm.CAR_MODEL_ID,cm.CAR_MODEL,cm.CAR_MAKE,cm.CAR_CC, \
+cm.CAR_INFO,cmv.value_name as STATUS,cm.START_DATE,cm.END_DATE \
+from LT_MAST_CAR_MODELS cm,LT_MAST_COMN_MASTER_VALUES cmv \
+where cmv.value_code(+)=cm.status \
+AND upper(cm.CAR_MODEL) like  nvl(?,upper(cm.CAR_MODEL)) \
+AND upper(cm.CAR_MAKE) like  nvl(?,upper(cm.CAR_MAKE)) \
+AND nvl(cm.CAR_CC,-99)  like nvl(?,nvl(cm.CAR_CC,-99)) \
+AND nvl(upper(cm.CAR_INFO),'s') like nvl(?,nvl(upper(cm.CAR_INFO),'s')) \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code)) \
+AND  TO_CHAR(cm.START_DATE,'DD-MM-YYYY')  \
+LIKE nvl(?, TO_CHAR(cm.START_DATE,'DD-MM-YYYY')) \
+AND  TO_CHAR(nvl (cm.END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (cm.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by  \
+CASE WHEN 2 = ? then upper(cm.CAR_MODEL) END asc, \
+CASE WHEN 12 = ? then upper(cm.CAR_MODEL) END desc, \
+CASE WHEN 3 = ? then cm.CAR_MAKE END asc, \
+CASE WHEN 13 = ? then cm.CAR_MAKE END desc, \
+CASE WHEN 4 = ? then cm.CAR_CC END asc, \
+CASE WHEN 14 = ? then cm.CAR_CC END desc, \
+CASE WHEN 5 = ? then upper(cmv.value_code) END asc, \
+CASE WHEN 15 = ? then upper(cmv.value_code) END desc,\
+CASE WHEN 6 = ? then cm.START_DATE END asc, \
+CASE WHEN 16 = ? then cm.START_DATE END desc, \
+CASE WHEN 7 = ? then cm.END_DATE END asc, \
+CASE WHEN 17 = ? then cm.END_DATE END desc,\
+CASE WHEN 8 = ? then cm.last_update_date END desc, \
+CASE WHEN 18 = ? then cm.last_update_date END asc )a  where ROWNUM <=? ) WHERE rnum >=?
+
+
+getCarModelsCount = select count(cm.CAR_MODEL_ID) \
+from LT_MAST_CAR_MODELS cm,LT_MAST_COMN_MASTER_VALUES cmv \
+where cmv.value_code=cm.status \
+AND upper(cm.CAR_MODEL) like  nvl(?,upper(cm.CAR_MODEL)) \
+AND upper(cm.CAR_MAKE) like  nvl(?,upper(cm.CAR_MAKE)) \
+AND nvl(cm.CAR_CC,-99)  like nvl(?,nvl(cm.CAR_CC,-99)) \
+AND nvl(upper(cm.CAR_INFO),'s') like nvl(?,nvl(upper(cm.CAR_INFO),'s')) \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code)) \
+AND  TO_CHAR(cm.START_DATE,'DD-MM-YYYY')  \
+LIKE nvl(?, TO_CHAR(cm.START_DATE,'DD-MM-YYYY')) \
+AND  TO_CHAR(nvl (cm.END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (cm.END_DATE, SYSDATE ),'DD-MM-YYYY'))
+
+deleteLtMastCarModels = DELETE FROM LT_MAST_CAR_MODELS WHERE CAR_MODEL_ID = ?
+
+findLtMastCarModelsByCc = SELECT * FROM LT_MAST_CAR_MODELS WHERE CAR_MODEL = ? AND CAR_CC = ?
+
+findActiveByGrade = SELECT mmr.grade,cm.* \
+FROM LT_MAST_CAR_MODELS cm ,LT_MAST_MILEAGE_RATES mmr \
+WHERE upper(mmr.GRADE) = ? \
+AND mmr.CAR_MODEL_ID(+) = cm.CAR_MODEL_ID \
+AND (cm.status = 'Active' OR cm.status = 'ACTIVE')  \
+AND cm.START_DATE <= SYSDATE \
+AND (cm.END_DATE IS NULL OR cm.END_DATE >= SYSDATE)

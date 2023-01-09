@@ -1,0 +1,88 @@
+getEmployeeCarDetailsDataTable = SELECT  *  FROM  \
+( SELECT a.*,ROWNUM rnum from \
+(select cd.LAST_UPDATE_DATE, \
+(cmvvv.value_name||' '||me.first_name||' '||me.last_name||' '||'( '||me.employee_number||' )') as empName, \
+nvl2(cm.CAR_MODEL,(cm.CAR_MODEL||' '||'( '||cm.CAR_MAKE||' )'),null) as car_model,\
+cd.EMP_CAR_DETAIL_ID,cd.CAR_REG_NO,\
+cmv.value_name as STATUS,cd.START_DATE,cd.END_DATE \
+from  LT_MAST_EMPLOYEE_CAR_DETAILS cd, LT_MAST_COMN_MASTER_VALUES cmv, \
+LT_MAST_COMN_MASTER_VALUES cmvvv, LT_MAST_EMPLOYEES  me , LT_MAST_CAR_MODELS cm \
+where cmv.VALUE_CODE(+)=cd.STATUS and cmvvv.value_code=me.TITLE \
+AND me.EMPLOYEE_ID(+)=cd.EMPLOYEE_ID \
+and cd.CAR_MODEL=cm.car_model_id(+) \
+AND upper((cm.CAR_MODEL||' '||'( '||cm.CAR_MAKE||' )')) \
+like  nvl(?,upper((cm.CAR_MODEL||' '||'( '||cm.CAR_MAKE||' )'))) \
+AND upper((cmvvv.value_name||' '||me.first_name||' '||me.last_name||' '||'( '||me.employee_number||' )')) \
+like  nvl(?,upper((cmvvv.value_name||' '||me.first_name||' '||me.last_name||' '||'( '||me.employee_number||' )'))) \
+AND upper(cd.CAR_REG_NO) like  nvl(?,upper(cd.CAR_REG_NO)) \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code)) \
+AND  TO_CHAR(cd.START_DATE,'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(cd.START_DATE,'DD-MM-YYYY')) \
+AND  TO_CHAR(nvl (cd.END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (cd.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by \
+CASE WHEN 2 = ? then upper((cmvvv.value_name||me.first_name||' '||me.last_name)) END asc,  \
+CASE WHEN 12 = ? then upper((cmvvv.value_name||me.first_name||' '||me.last_name)) END desc, \
+CASE WHEN 3 = ? then upper(cd.CAR_MODEL) END asc, \
+CASE WHEN 13 = ? then upper(cd.CAR_MODEL) END desc, \
+CASE WHEN 4 = ? then upper(cd.CAR_REG_NO) END asc, \
+CASE WHEN 14 = ? then upper(cd.CAR_REG_NO) END desc, \
+CASE WHEN 7 = ? then upper(cmv.value_name)  END asc, \
+CASE WHEN 17 = ? then upper(cmv.value_name)  END desc, \
+CASE WHEN 5 = ? then cd.START_DATE END asc, \
+CASE WHEN 15 = ? then cd.START_DATE END desc, \
+CASE WHEN 6= ? then cd.END_DATE END asc, \
+CASE WHEN 16 = ? then cd.END_DATE END desc, \
+CASE WHEN 1 = ? then cd.last_update_date END desc, \
+CASE WHEN 11 = ? then cd.last_update_date END asc )a  where ROWNUM <=? ) WHERE rnum >=?
+
+
+
+
+getEmployeeCarDetailsCount = select count(cd.EMP_CAR_DETAIL_ID) \
+from  LT_MAST_EMPLOYEE_CAR_DETAILS cd, LT_MAST_COMN_MASTER_VALUES cmv, \
+LT_MAST_COMN_MASTER_VALUES cmvvv, LT_MAST_EMPLOYEES  me , LT_MAST_CAR_MODELS cm \
+where cmv.VALUE_CODE(+)=cd.STATUS and cmvvv.value_code=me.TITLE \
+AND me.EMPLOYEE_ID(+)=cd.EMPLOYEE_ID \
+and cd.CAR_MODEL=cm.car_model_id(+) \
+AND upper((cm.CAR_MODEL||' '||'( '||cm.CAR_MAKE||' )')) \
+like  nvl(?,upper((cm.CAR_MODEL||' '||'( '||cm.CAR_MAKE||' )'))) \
+AND upper((cmvvv.value_name||' '||me.first_name||' '||me.last_name||' '||'( '||me.employee_number||' )')) \
+like  nvl(?,upper((cmvvv.value_name||' '||me.first_name||' '||me.last_name||' '||'( '||me.employee_number||' )'))) \
+AND upper(cd.CAR_REG_NO) like  nvl(?,upper(cd.CAR_REG_NO)) \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code)) \
+AND  TO_CHAR(cd.START_DATE,'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(cd.START_DATE,'DD-MM-YYYY')) \
+AND  TO_CHAR(nvl (cd.END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (cd.END_DATE, SYSDATE ),'DD-MM-YYYY'))
+								
+
+
+
+
+								
+findAllLtMastEmployeeCarDetails = Select * from LT_MAST_EMPLOYEE_CAR_DETAILS
+
+
+deleteByLtMastEmployeeCarDetailsid = delete from LT_MAST_EMPLOYEE_CAR_DETAILS where EMP_CAR_DETAIL_ID = ?		
+
+
+
+getByLtMastEmployeeCarDetailsID = select \
+(cmv.value_name||' '||mp.first_name||' '||mp.last_name||' '||' ( '||' '||mp.employee_number||' '||' )') \
+ as empName, ecd.EMPLOYEE_ID,mp.GRADE, \
+ ecd.CAR_MODEL,ecd.CAR_REG_NO,ecd.STATUS,ecd.START_DATE,ecd.END_DATE,ecd.CREATED_BY, \
+ ecd.CREATION_DATE,ecd.LAST_UPDATE_LOGIN,ecd.LAST_UPDATED_BY,ecd.LAST_UPDATE_DATE \
+ from LT_MAST_EMPLOYEE_CAR_DETAILS ecd, \
+ LT_MAST_EMPLOYEES mp,lt_mast_comn_master_values cmv \
+ WHERE ecd.EMPLOYEE_ID=mp.EMPLOYEE_ID \
+ AND cmv.value_code=mp.title  and ecd.EMP_CAR_DETAIL_ID=?	
+									  
+getEmployeeCarDetailsByEmpIdAndCarModel = select * from LT_MAST_EMPLOYEE_CAR_DETAILS ecd \
+WHERE 	ecd.EMPLOYEE_ID = ? AND ecd.CAR_MODEL = ? AND ecd.STATUS = 'ACTIVE' \
+AND ecd.START_DATE <= SYSDATE AND ( ecd.END_DATE is null OR ecd.END_DATE >= SYSDATE )
+
+getEmployeeCarDetailsByEmpId= select * from LT_MAST_EMPLOYEE_CAR_DETAILS ecd \
+WHERE 	ecd.EMPLOYEE_ID = ? AND ecd.STATUS = 'ACTIVE' \
+AND ecd.START_DATE <= SYSDATE AND ( ecd.END_DATE is null OR ecd.END_DATE >= SYSDATE )					  		
+

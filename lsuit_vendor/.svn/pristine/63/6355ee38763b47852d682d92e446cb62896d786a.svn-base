@@ -1,0 +1,17 @@
+checkforApprovalsForVendor=  SELECT ma.*  \
+FROM LT_MAST_MODULE_APPROVALS ma \
+WHERE ma.DIVISION_ID = \
+(SELECT e.DIVISION_ID FROM LT_MAST_EMPLOYEES e,LT_MAST_VENDORS v WHERE e.EMPLOYEE_ID = v.initiator_id and v.VENDOR_ID = ? )
+
+
+chkIsAprovedByAnyOne = SELECT * FROM  lt_mast_module_approvals b \
+WHERE b.MODULE_APPROVAL_ID = ( SELECT MODULE_APPROVAL_ID \
+FROM lt_vendor_approval WHERE VENDOR_APPROVAL_ID  = ? )
+
+chkInvoiceIsAprovedByAnyOne = SELECT * FROM  lt_mast_module_approvals b \
+WHERE b.MODULE_APPROVAL_ID = ( SELECT MODULE_APPROVAL_ID \
+FROM LT_INVOICE_APPROVAL WHERE INVOICE_APPROVAL_ID  = ? )
+
+
+getModuleAppIdByVendorAppId =  SELECT MODULE_APPROVAL_ID \
+FROM lt_vendor_approval WHERE VENDOR_APPROVAL_ID  = ?

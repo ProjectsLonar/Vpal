@@ -1,0 +1,11 @@
+server.context-path=/lsuitemasters
+server.contextPath=/lsuitemasters
+server.port=8088
+security.basic.enabled=false
+management.security.enabled=false
+logging.level.org=INFO
+#endpoints.cors.allowed-origins=*
+
+LOGIN_URL = http://203.109.87.134:8080/vendorportal/#/login
+
+

@@ -1,0 +1,114 @@
+package com.lonar.UserManagement.security;
+
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+
+import com.lonar.UserManagement.web.model.LtMastCommonMessage;
+import com.lonar.UserManagement.web.repository.LtMastCommonMessageRepository;
+import com.lonar.UserManagement.web.service.LtMastCommonMessageService;
+
+
+@Configuration
+@EnableResourceServer
+@EnableWebSecurity
+public class ResourceServerConfiguration  extends ResourceServerConfigurerAdapter{
+
+	   @Autowired
+	   private UserDetailsService userDetailsService;
+	   
+	   @Autowired
+	   LtMastCommonMessageService ltMastCommonMessageService;
+	   
+	   @Autowired
+	   LtMastCommonMessageRepository ltMastCommonMessageRepository;
+		 
+	   public static Map<Integer,String> messages = new HashMap<Integer,String>();
+	
+	  /*  @Value("${signing-key:oui214hmui23o4hm1pui3o2hp4m1o3h2m1o43}")
+	    private String signingKey;*/
+
+	    public ResourceServerConfiguration() {
+	        super();
+	    }
+	    
+	    @Bean
+	    public Map getAllMessages() {
+			try
+			{
+				//List<LtMastCommonMessage> messageList = (List<LtMastCommonMessage>) ltMastCommonMessageRepository.findAll();
+				List<LtMastCommonMessage> messageList = ltMastCommonMessageService.listLtMastCommonMessage();
+				 Iterator<LtMastCommonMessage> itr=messageList.iterator();
+					while(itr.hasNext())
+					{
+						LtMastCommonMessage ltMastCommonMessage=itr.next();
+						messages.put(Integer.parseInt(ltMastCommonMessage.getMessageCode()),ltMastCommonMessage.getMessageDesc());
+					}
+				
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+	        return messages;
+	    }
+	    // global security concerns
+
+	    @Bean
+	    public AuthenticationProvider authProvider() {
+	        final DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+	        authProvider.setUserDetailsService(userDetailsService);
+	        authProvider.setPasswordEncoder(passwordEncoder());
+	        return authProvider;
+	    }
+
+	    @Autowired
+	    public void configureGlobal(final AuthenticationManagerBuilder auth) {
+	        auth.authenticationProvider(authProvider());
+	    }
+	    
+	    @Override
+	    public void configure(final HttpSecurity http) throws Exception {
+	    	 http
+	         .exceptionHandling()
+	         	  //.and().addFilterBefore(new ResourceServerFilter(), BasicAuthenticationFilter.class)
+	         	  .and()
+	             .authorizeRequests()
+	             .antMatchers("/oauth/**").permitAll()
+	             .antMatchers("/api/**").permitAll()
+	             .antMatchers("/**").permitAll()
+	             .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+	             .and()//
+	             .csrf().disable();
+	    }
+	    
+	    @Bean
+	    public PasswordEncoder passwordEncoder() {
+	        return new PasswordEncoder() {
+	            @Override
+	            public String encode(CharSequence rawPassword) {
+	                return rawPassword.toString();
+	            }
+	            @Override
+	            public boolean matches(CharSequence rawPassword, String encodedPassword) {
+	                //return rawPassword.toString().equals(encodedPassword);
+	                return true;
+	            }
+	        };
+	    }
+}

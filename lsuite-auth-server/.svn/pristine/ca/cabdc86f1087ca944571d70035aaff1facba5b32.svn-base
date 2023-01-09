@@ -1,0 +1,24 @@
+listVendorSisterConcerns = SELECT * FROM LT_MAST_VENDOR_SISTER_CONCERNS v
+
+getVendorSisterConcernsBytVendorId = SELECT * FROM LT_MAST_VENDOR_SISTER_CONCERNS v WHERE v.VENDOR_ID = ?
+
+getByVendorSisterConcernsId = SELECT * FROM LT_MAST_VENDOR_SISTER_CONCERNS v WHERE v.VENDOR_SISTER_CONCERNS_ID = ?
+
+
+saveVendorSisterConcerns = INSERT INTO LT_MAST_VENDOR_SISTER_CONCERNS(VENDOR_SISTER_CONCERNS_ID,VENDOR_ID, \
+									   COMPANY_NAME,MAJOR_PRODUCTS,COMPANY_ADDRESS,COMPANY_CONTACT_PERSON, \
+									   COMPANY_CONTACT_DESG,COMPANY_CONTACT_NO,COMPANY_CONTACT_EMAIL,CREATED_BY, \
+									   CREATION_DATE,LAST_UPDATE_LOGIN,LAST_UPDATED_BY,LAST_UPDATE_DATE) \
+									   VALUES(lt_mast_vend_sis_conce_s.nextval,?,?,?,?,?,?,?,?,?,?,?,?,?)
+									   
+updateVendorSisterConcerns = UPDATE lt_mast_vendor_sister_concerns SET VENDOR_ID =?,COMPANY_NAME=?,MAJOR_PRODUCTS=?, \
+									   COMPANY_ADDRESS=?,COMPANY_CONTACT_PERSON=?,COMPANY_CONTACT_DESG=?, \
+									   COMPANY_CONTACT_NO=?,COMPANY_CONTACT_EMAIL=?,CREATED_BY=?,CREATION_DATE=?, \
+									   LAST_UPDATE_LOGIN=?,LAST_UPDATED_BY=?,LAST_UPDATE_DATE=? \
+									   WHERE VENDOR_SISTER_CONCERNS_ID=?	
+									   
+									   
+deleteVendorSisterConcerns = DELETE FROM lt_mast_vendor_sister_concerns WHERE VENDOR_SISTER_CONCERNS_ID = ?	
+
+
+deleteByVendorIdVendorSisterConcerns = DELETE FROM lt_mast_vendor_sister_concerns WHERE VENDOR_ID = ?								   								   

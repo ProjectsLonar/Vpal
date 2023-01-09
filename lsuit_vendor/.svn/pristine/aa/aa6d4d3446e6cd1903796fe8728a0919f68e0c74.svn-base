@@ -1,0 +1,47 @@
+getLtInvoiceHeadersStgCount = select  COUNT(ih.INVOICE_IMPORT_ID) \
+from LT_INVOICE_HEADERS_STG  ih  \
+where  ih.REQUEST_ID = ?  \
+AND nvl(upper(ih.INVOICE_TYPE),'xx') like nvl(?,nvl(upper(ih.INVOICE_TYPE),'xx'))  \
+AND nvl(upper(ih.INVOICE_NUMBER),'xx') like nvl(?,nvl(upper(ih.INVOICE_NUMBER),'xx')) \
+AND  TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY'))  \
+AND nvl(upper(ih.PO_NUMBER),'xx') like nvl(?,nvl(upper(ih.PO_NUMBER),'xx'))  \
+AND nvl(upper(ih.BUYER),'xyx') like nvl( ?, nvl(upper(ih.BUYER),'xyx'))  \
+AND nvl((ih.INVOICE_LINE_NUMBER),-99) like nvl(?,nvl((ih.INVOICE_LINE_NUMBER),-99))  \
+AND nvl(upper(ih.TAX_NAME),'xx') like nvl(?,nvl(upper(ih.TAX_NAME),'xx'))  \
+AND nvl(upper(ih.VENDOR_CODE),'xyx') like nvl( ?, nvl(upper(ih.VENDOR_CODE),'xyx'))  \
+AND nvl(upper(ih.STATUS),'xyx') like nvl( ?, nvl(upper(ih.STATUS),'xyx'))
+
+getLtInvoiceHeadersStgData =select  *  from ( \
+SELECT a.*,ROWNUM RNUM from ( \
+select  ih.INVOICE_IMPORT_ID,ih.REQUEST_ID,ih.INVOICE_TYPE,ih.INVOICE_NUMBER,ih.INVOICE_DATE,ih.INVOICE_LINE_NUMBER, \
+ih.PO_NUMBER,ih.BUYER,ih.VENDOR_CODE,ih.STATUS,VENDOR_ADDRESS_CODE,ih.BILLING_ADDRESS,ih.SHIPPING_ADDRESS,  \
+ih.EXCHANGE_RATE,ih.PAYTERMS,ih.DESCRIPTION,ih.LINE_TYPE,ih.PRODUCT_CATEGORY_CODE,ih.SUB_CATEGORY_CODE,ih.PRODUCT,ih.LINE_DESCRIPTION, \
+ih.UOM,ih.INVOICE_QUANTITY,ih.INVOICE_RATE,ih.TAX_NAME,ih.CUSTOMER_NAME,ih.ERROR_MESSAGE ,ih.RECORD_STATUS  \
+from LT_INVOICE_HEADERS_STG  ih  \
+where  ih.REQUEST_ID = ?  \
+AND nvl(upper(ih.INVOICE_TYPE),'xx') like nvl(?,nvl(upper(ih.INVOICE_TYPE),'xx'))  \
+AND nvl(upper(ih.INVOICE_NUMBER),'xx') like nvl(?,nvl(upper(ih.INVOICE_NUMBER),'xx')) \
+AND  TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ih.INVOICE_DATE, SYSDATE ),'DD-MM-YYYY'))  \
+AND nvl(upper(ih.PO_NUMBER),'xx') like nvl(?,nvl(upper(ih.PO_NUMBER),'xx'))  \
+AND nvl(upper(ih.BUYER),'xyx') like nvl( ?, nvl(upper(ih.BUYER),'xyx'))  \
+AND nvl((ih.INVOICE_LINE_NUMBER),-99) like nvl(?,nvl((ih.INVOICE_LINE_NUMBER),-99))  \
+AND nvl(upper(ih.TAX_NAME),'xx') like nvl(?,nvl(upper(ih.TAX_NAME),'xx'))  \
+AND nvl(upper(ih.VENDOR_CODE),'xyx') like nvl( ?, nvl(upper(ih.VENDOR_CODE),'xyx'))  \
+AND nvl(upper(ih.RECORD_STATUS),'xyx') like nvl( ?, nvl(upper(ih.RECORD_STATUS),'xyx'))  \
+order by \
+CASE WHEN 2 = ? then upper(ih.INVOICE_TYPE) END asc, \
+CASE WHEN 12 = ? then upper(ih.INVOICE_TYPE) END desc, \
+CASE WHEN 3 = ? then upper(ih.INVOICE_NUMBER) END asc, \
+CASE WHEN 13 = ? then upper(ih.INVOICE_NUMBER) END desc, \
+CASE WHEN 4 = ? then ih.INVOICE_DATE END asc, \
+CASE WHEN 14 = ? then ih.INVOICE_DATE END desc, \
+CASE WHEN 5 = ? then (ih.INVOICE_LINE_NUMBER) END asc, \
+CASE WHEN 15 = ? then (ih.INVOICE_LINE_NUMBER) END desc, \
+CASE WHEN 6 = ? then upper(ih.TAX_NAME) END asc, \
+CASE WHEN 16 = ? then upper(ih.TAX_NAME) END desc, \
+CASE WHEN 7 = ? then upper(ih.VENDOR_CODE) END asc, \
+CASE WHEN 17 = ? then upper(ih.VENDOR_CODE) END desc, \
+CASE WHEN 8 = ? then upper(ih.RECORD_STATUS) END asc, \
+CASE WHEN 18 = ? then upper(ih.RECORD_STATUS) END desc,\
+CASE WHEN 1 = ? then ih.INVOICE_IMPORT_ID END desc, \
+CASE WHEN 11 = ? then ih.INVOICE_IMPORT_ID END asc)a  where ROWNUM <=?) WHERE rnum >=?

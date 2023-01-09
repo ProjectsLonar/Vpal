@@ -1,0 +1,12 @@
+# Email
+
+
+ email.host : smtp.gmail.com
+ email.port : 567
+ email.username : expenseteam1@gmail.com
+ email.password : Lonar@12345
+ email.smtp.starttls.enable : true
+ email.smtp.auth : true
+ email.transport.protocol : smtp
+email.smtp.sendpartial : true
+ email.debug : false

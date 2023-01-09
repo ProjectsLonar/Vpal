@@ -1,0 +1,85 @@
+getLtMastSysRequestsCount = select count(sr.REQUEST_ID) \
+FROM LT_MAST_SYS_REQUESTS sr \
+where \
+nvl(sr.REQUEST_ID,-999) like nvl(?,nvl(sr.REQUEST_ID,-99) ) \
+AND nvl(upper(sr.REQUEST_NAME),'xx') like  nvl(?,nvl(upper(sr.REQUEST_NAME),'xx')) \
+AND nvl(upper(sr.REQUESTOR_NAME),'xx') like  nvl(?,nvl(upper(sr.REQUESTOR_NAME),'xx')) \
+AND  TO_CHAR(sr.ACTUAL_START_DATE,'DD-MM-YYYY')  LIKE nvl(?, TO_CHAR(sr.ACTUAL_START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (sr.ACTUAL_END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (sr.ACTUAL_END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+AND nvl(upper(sr.FILE_NAME),'xx') like nvl(?,nvl(upper(sr.FILE_NAME),'xx')) \
+AND nvl(upper(sr.PHASE),'xx') like nvl(?,nvl(upper(sr.PHASE),'xx')) \
+AND nvl(upper(sr.STATUS),'xx') like nvl(?,nvl(upper(sr.STATUS),'xx'))
+
+getLtMastSysRequestsDataTableRecords = select  *  from \
+(SELECT a.*,ROWNUM RNUM from \
+(select sr.REQUEST_ID,sr.REQUEST_NAME,sr.REQUESTOR_NAME,sr.ACTUAL_START_DATE,sr.ACTUAL_END_DATE, \
+sr.FILE_NAME,sr.PHASE,sr.STATUS,sr.REQUESTOR_ID,sr.LAST_UPDATE_DATE,sr.STG_TAB_NAME \
+FROM LT_MAST_SYS_REQUESTS sr \
+where \
+nvl(sr.REQUEST_ID,-999) like nvl(?,nvl(sr.REQUEST_ID,-99) ) \
+AND nvl(upper(sr.REQUEST_NAME),'xx') like  nvl(?,nvl(upper(sr.REQUEST_NAME),'xx')) \
+AND nvl(upper(sr.REQUESTOR_NAME),'xx') like  nvl(?,nvl(upper(sr.REQUESTOR_NAME),'xx')) \
+AND  TO_CHAR(sr.ACTUAL_START_DATE,'DD-MM-YYYY')  LIKE nvl(?, TO_CHAR(sr.ACTUAL_START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (sr.ACTUAL_END_DATE, SYSDATE ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (sr.ACTUAL_END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+AND nvl(upper(sr.FILE_NAME),'xx') like nvl(?,nvl(upper(sr.FILE_NAME),'xx')) \
+AND nvl(upper(sr.PHASE),'xx') like nvl(?,nvl(upper(sr.PHASE),'xx')) \
+AND nvl(upper(sr.STATUS),'xx') like nvl(?,nvl(upper(sr.STATUS),'xx'))  \
+order by  \
+CASE WHEN 1 = ? then sr.REQUEST_ID END asc, \
+CASE WHEN 11 = ? then sr.REQUEST_ID END desc, \
+CASE WHEN 2 = ? then upper(sr.REQUEST_NAME) END asc, \
+CASE WHEN 12 = ? then upper(sr.REQUEST_NAME) END desc, \
+CASE WHEN 3 = ? then upper(sr.REQUESTOR_NAME) END asc, \
+CASE WHEN 13 = ? then upper(sr.REQUESTOR_NAME) END desc, \
+CASE WHEN 4 = ? then sr.ACTUAL_START_DATE END asc, \
+CASE WHEN 14 = ? then sr.ACTUAL_START_DATE END desc, \
+CASE WHEN 5 = ? then sr.ACTUAL_END_DATE END asc, \
+CASE WHEN 15 = ? then sr.ACTUAL_END_DATE END desc,  \
+CASE WHEN 6 = ? then upper(sr.FILE_NAME) END asc,  \
+CASE WHEN 16 = ? then upper(sr.FILE_NAME) END desc, \
+CASE WHEN 7 = ? then upper(sr.PHASE) END asc, \
+CASE WHEN 17 = ? then upper(sr.PHASE) END desc, \
+CASE WHEN 8 = ? then sr.STATUS END asc, \
+CASE WHEN 18 = ? then sr.STATUS END desc, \
+CASE WHEN 9 = ? then sr.LAST_UPDATE_DATE END desc, \
+CASE WHEN 19 = ? then sr.LAST_UPDATE_DATE END asc )  a  where ROWNUM <=? )  WHERE RNUM >=?
+
+getLtMastSysRequestReportDataTableRecords = select  *  from \
+(SELECT a.*,ROWNUM RNUM from \
+(select srr.REQUEST_ID,srr.CODE,srr.DESCRIPTION,srr.STATUS,srr.ERROR_CODE,srr.ERROR_MESSAGE \
+FROM LT_MAST_SYS_REQUEST_REPORT srr \
+where srr.REQUEST_ID = ? \
+AND nvl(srr.REQUEST_ID,-999) like nvl(?,nvl(srr.REQUEST_ID,-99) ) \
+AND nvl(upper(srr.CODE),'xx') like  nvl(?,nvl(upper(srr.CODE),'xx')) \
+AND nvl(upper(srr.DESCRIPTION),'xx') like  nvl(?,nvl(upper(srr.DESCRIPTION),'xx')) \
+AND nvl(upper(srr.STATUS),'xx') like nvl(?,nvl(upper(srr.STATUS),'xx')) \
+AND nvl(upper(srr.ERROR_CODE),'xx') like nvl(?,nvl(upper(srr.ERROR_CODE),'xx')) \
+AND nvl(upper(srr.ERROR_MESSAGE),'xx') like nvl(?,nvl(upper(srr.ERROR_MESSAGE),'xx'))  \
+order by  \
+CASE WHEN 1 = ? then srr.REQUEST_ID END asc, \
+CASE WHEN 11 = ? then srr.REQUEST_ID END desc, \
+CASE WHEN 2 = ? then srr.CODE END asc, \
+CASE WHEN 12 = ? then srr.CODE END desc, \
+CASE WHEN 3 = ? then srr.DESCRIPTION END asc, \
+CASE WHEN 13 = ? then srr.DESCRIPTION END desc, \
+CASE WHEN 4 = ? then srr.STATUS END asc, \
+CASE WHEN 14 = ? then srr.STATUS END desc, \
+CASE WHEN 5 = ? then srr.ERROR_CODE END asc, \
+CASE WHEN 15 = ? then srr.ERROR_CODE END desc, \
+CASE WHEN 6 = ? then srr.ERROR_MESSAGE END asc, \
+CASE WHEN 16 = ? then srr.ERROR_MESSAGE END desc, \
+CASE WHEN 8 = ? then srr.LAST_UPDATE_DATE END desc, \
+CASE WHEN 18 = ? then srr.LAST_UPDATE_DATE END asc )  a  where ROWNUM <=? )  WHERE RNUM >=?
+
+getLtMastSysRequestReportCount = select count(srr.REQUEST_ID) \
+FROM LT_MAST_SYS_REQUEST_REPORT srr \
+where srr.REQUEST_ID = ? \
+AND nvl(srr.REQUEST_ID,-999) like nvl(?,nvl(srr.REQUEST_ID,-99) ) \
+AND nvl(upper(srr.CODE),'xx') like  nvl(?,nvl(upper(srr.CODE),'xx')) \
+AND nvl(upper(srr.DESCRIPTION),'xx') like  nvl(?,nvl(upper(srr.DESCRIPTION),'xx')) \
+AND nvl(upper(srr.STATUS),'xx') like nvl(?,nvl(upper(srr.STATUS),'xx')) \
+AND nvl(upper(srr.ERROR_CODE),'xx') like nvl(?,nvl(upper(srr.ERROR_CODE),'xx')) \
+AND nvl(upper(srr.ERROR_MESSAGE),'xx') like nvl(?,nvl(upper(srr.ERROR_MESSAGE),'xx'))
+ 

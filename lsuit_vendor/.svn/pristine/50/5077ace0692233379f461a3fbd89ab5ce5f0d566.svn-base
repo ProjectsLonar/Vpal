@@ -1,0 +1,133 @@
+get_user_details_by_id_OLDD =  SELECT usr.*, emp.EMPLOYEE_ID, \
+nvl2(usr.EMPLOYEE_ID,(emp.TITLE||' '||emp.first_name||' '||emp.last_name||' '||'( '||emp.employee_number||' )'),'') as employee_name, \
+nvl2( emp.cost_center_id,(lcc.cost_center_name||' '||  ('('||lcc.COST_CENTER_CODE||')')), null)as cost_center_name, \
+nvl2(usr.EMPLOYEE_ID,( br.branch_name||' '||'('||br.branch_code||')'),'') as location_name \
+from lt_mast_users usr, LT_MAST_EMPLOYEES emp , lt_mast_cost_centers lcc, lt_mast_branches br \
+where usr.EMPLOYEE_ID = emp.EMPLOYEE_ID(+) \
+AND  emp.COST_CENTER_ID = lcc.COST_CENTER_ID(+) \
+AND  emp.BRANCH_ID = br.BRANCH_ID(+) AND USER_ID = ?
+
+get_user_details_by_id =  SELECT usr.*, emp.EMPLOYEE_ID, ved.VENDOR_NAME, \
+	nvl2(usr.EMPLOYEE_ID,( cmv.value_name||' '||emp.first_name||' '||emp.last_name||' '||'( '||emp.employee_number||' )'),'') as employee_name, \
+	nvl2( emp.cost_center_id,(lcc.cost_center_name||' '||  ('('||lcc.COST_CENTER_CODE||')')), null)as cost_center_name, \
+	nvl2(usr.EMPLOYEE_ID,( br.branch_name||' '||'('||br.branch_code||')'),'') as location_name \
+	from lt_mast_users usr, LT_MAST_EMPLOYEES emp , lt_mast_cost_centers lcc, lt_mast_branches br , LT_MAST_VENDORS ved , \
+	LT_MAST_COMN_MASTER_VALUES cmv \
+	where usr.EMPLOYEE_ID = emp.EMPLOYEE_ID(+) \
+    AND emp.TITLE = cmv.value_code(+) \
+	AND  emp.COST_CENTER_ID = lcc.COST_CENTER_ID(+) \
+	AND ved.VENDOR_ID(+) = usr.VENDOR_ID \
+	AND  emp.BRANCH_ID = br.BRANCH_ID(+) \
+	AND USER_ID = ?
+		
+get_active_role = select ROLE_ID, ROLE_NAME from LT_MAST_ROLES where STATUS = ?
+
+user_role_count = SELECT count(usr.USER_ROLE_ID)  \
+	FROM LT_MAST_USER_ROLES usr, LT_MAST_ROLES rl  \
+	WHERE usr.ROLE_ID = rl.ROLE_ID  \
+	AND usr.USER_ID = ?  \
+	AND rl.ROLE_NAME like nvl( ? , rl.ROLE_NAME )   \
+	AND TO_CHAR(usr.START_DATE,'DD-MM-YYYY') LIKE nvl( ? , TO_CHAR(usr.START_DATE,'DD-MM-YYYY'))  \
+	AND TO_CHAR(nvl(usr.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl( ? , TO_CHAR(nvl(usr.END_DATE, SYSDATE ), 'DD-MM-YYYY'))
+
+user_role_details_list =   select  *  from (SELECT a.*, ROWNUM RNUM from ( \
+	 SELECT usr.USER_ROLE_ID, rl.ROLE_NAME, usr.START_DATE, usr.END_DATE \
+	FROM LT_MAST_USER_ROLES usr, LT_MAST_ROLES rl \
+	WHERE usr.ROLE_ID = rl.ROLE_ID \
+	AND usr.USER_ID = ? \
+	AND rl.ROLE_NAME like nvl( ? , rl.ROLE_NAME ) \
+	AND TO_CHAR(usr.START_DATE,'DD-MM-YYYY') LIKE nvl( ? , TO_CHAR(usr.START_DATE,'DD-MM-YYYY')) \
+	AND TO_CHAR(nvl(usr.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl( ? , TO_CHAR(nvl(usr.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+	 )a where ROWNUM <= ? ) WHERE rnum >= ?
+
+getUserNamePassword = SELECT USER_ID,USER_NAME,LOGINFAILUREATTEMPT,PASSWORD,PASSWORD_DATE,EMPLOYEE_ID,EMAIL FROM lt_mast_users r WHERE LOWER(r.USER_NAME) like ? and r.PASSWORD = ?
+
+findByUserName = SELECT r.*,( cmv.value_name ||' '|| e.FIRST_NAME ||' '||e.LAST_NAME) AS EMPLOYEE_NAME,e.DIVISION_ID, e.BRANCH_ID as LOCATION_ID \
+FROM lt_mast_users r,LT_MAST_EMPLOYEES e,LT_MAST_COMN_MASTER_VALUES cmv  \
+WHERE ( lower(r.USER_NAME) = ?  OR UPPER(r.EMAIL) = ? )  \
+AND r.EMPLOYEE_ID = e.EMPLOYEE_ID(+)   \
+AND e.TITLE = cmv.Value_code(+)   \
+AND r.START_DATE <=SYSDATE AND ( r.END_DATE IS NULL OR r.END_DATE >= SYSDATE )
+
+
+findActiveLikeEmail = SELECT r.*,( cmv.value_name ||' '|| e.FIRST_NAME ||' '||e.LAST_NAME) AS EMPLOYEE_NAME \
+FROM lt_mast_users r,LT_MAST_EMPLOYEES e,LT_MAST_COMN_MASTER_VALUES cmv  \
+WHERE ( (r.EMAIL) = ? )  \
+AND r.EMPLOYEE_ID = e.EMPLOYEE_ID(+)   \
+AND e.TITLE = cmv.Value_code(+)   \
+AND r.START_DATE <=SYSDATE AND ( r.END_DATE IS NULL OR r.END_DATE >= SYSDATE )
+
+findByEmail = SELECT * FROM lt_mast_users r WHERE LOWER(r.EMAIL) like ? \
+AND r.START_DATE <=SYSDATE AND ( r.END_DATE IS NULL OR r.END_DATE >= SYSDATE )
+
+getByUserId = SELECT * from lt_mast_users  where USER_ID = ?		
+
+findLtMastUsersByEmployeeId = SELECT USER_ID,USER_NAME,EMAIL,PASSWORD,STATUS,EMPLOYEE_ID \
+from lt_mast_users  where EMPLOYEE_ID = ? \
+AND START_DATE <=SYSDATE AND ( END_DATE IS NULL OR END_DATE >= SYSDATE )
+
+findByUserNameAndEmailId = SELECT * FROM LT_MAST_USERS l WHERE upper(l.USER_NAME) = ? \
+AND lower(l.EMAIL)= ? AND l.START_DATE <=SYSDATE AND ( l.END_DATE IS NULL OR l.END_DATE >= SYSDATE )
+
+getLtMastUsersDataTableRecords = select  *  from  \
+(SELECT a.*,ROWNUM RNUM from  \
+(select mu.USER_ID,mu.USER_NAME,mu.EMAIL, \
+mu.START_DATE,mu.END_DATE,mu.EMPLOYEE_ID,mu.LAST_UPDATE_DATE,cmv.value_name as status \
+FROM LT_MAST_USERS mu,LT_MAST_COMN_MASTER_VALUES cmv \
+where  \
+nvl(upper(mu.USER_NAME),'xx') like  nvl(?,nvl(upper(mu.USER_NAME),'xx'))  \
+AND TO_CHAR(mu.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(mu.START_DATE,'DD-MM-YYYY')) \
+AND TO_CHAR(nvl (mu.END_DATE, SYSDATE+1 ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (mu.END_DATE, SYSDATE+1 ),'DD-MM-YYYY')) \
+AND nvl(upper(mu.STATUS),'xx') like  nvl(?,nvl(upper(mu.STATUS),'xx')) \
+AND nvl(upper(mu.EMAIL),'xx') like nvl(?,nvl(upper(mu.EMAIL),'xx')) \
+AND mu.STATUS = cmv.value_code(+) \
+order by  \
+CASE WHEN 2 = ? then upper(mu.USER_NAME) END asc, \
+CASE WHEN 12 = ? then upper(mu.USER_NAME) END desc, \
+CASE WHEN 3 = ? then mu.START_DATE END asc, \
+CASE WHEN 13 = ? then mu.START_DATE END desc, \
+CASE WHEN 4 = ? then mu.END_DATE END asc, \
+CASE WHEN 14 = ? then mu.END_DATE END desc, \
+CASE WHEN 5 = ? then mu.STATUS END asc, \
+CASE WHEN 15 = ? then mu.STATUS END desc, \
+CASE WHEN 6 = ? then upper(mu.EMAIL) END asc, \
+CASE WHEN 16 = ? then upper(mu.EMAIL) END desc, \
+CASE WHEN 8 = ? then mu.LAST_UPDATE_DATE END desc, \
+CASE WHEN 18 = ? then mu.LAST_UPDATE_DATE END asc )  a  where ROWNUM <=? )  WHERE RNUM >=?
+
+getLtMastUsersCount = select count(mu.USER_ID) \
+FROM LT_MAST_USERS mu,LT_MAST_COMN_MASTER_VALUES cmv \
+where  \
+nvl(upper(mu.USER_NAME),'xx') like  nvl(?,nvl(upper(mu.USER_NAME),'xx'))  \
+AND TO_CHAR(mu.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(mu.START_DATE,'DD-MM-YYYY')) \
+AND TO_CHAR(nvl (mu.END_DATE, SYSDATE+1 ),'DD-MM-YYYY') \
+LIKE nvl(?, TO_CHAR(nvl (mu.END_DATE, SYSDATE+1 ),'DD-MM-YYYY')) \
+AND nvl(upper(mu.STATUS),'xx') like  nvl(?,nvl(upper(mu.STATUS),'xx')) \
+AND nvl(upper(mu.EMAIL),'xx') like nvl(?,nvl(upper(mu.EMAIL),'xx')) \
+AND mu.STATUS = cmv.value_code(+)
+
+findByLikeActiveUserName= SELECT USER_ID,USER_NAME,EMAIL,DESCRIPTION,EMPLOYEE_ID \
+						FROM LT_MAST_USERS u \
+						WHERE upper(u.USER_NAME) like ? \
+						and UPPER(u.status)='ACTIVE' AND u.START_DATE <= SYSDATE \
+						AND (u.END_DATE >=SYSDATE OR u.END_DATE is null)
+ 
+ findMenu = SELECT ltMastModules.module_Id,ltMastModules.module_Group,ltMastModules.module_Name,ltMastModules.MODULE_CODE, \
+	ltMastModules.module_Url,ltMastModules.SEQUENCE_NUMBER,  ltMastRoleModules.CREATE_FLAG,  \
+	ltMastRoleModules.edit_FLAG,ltMastRoleModules.READ_FLAG,ltMastRoleModules.DELETE_FLAG  \
+	FROM Lt_Mast_Role_Modules ltMastRoleModules,Lt_Mast_Modules ltMastModules  \
+	WHERE ltMastRoleModules.module_Id = ltMastModules.module_Id(+)  \
+	AND (ltMastRoleModules.start_Date) <= SYSDATE  \
+	AND ((ltMastRoleModules.end_Date) IS NULL OR (ltMastRoleModules.end_Date) >= SYSDATE)  \
+	AND ltMastRoleModules.role_Id IN (SELECT ltMastUserRoles.role_Id \
+	FROM Lt_Mast_User_Roles ltMastUserRoles , Lt_Mast_Roles ltMastRoles \
+	WHERE ltMastUserRoles.role_Id = ltMastRoles.role_Id(+)  \
+	AND (ltMastRoles.start_Date) <= SYSDATE  \
+	AND ((ltMastRoles.end_Date) IS NULL   OR (ltMastRoles.END_DATE) >= SYSDATE) \
+	AND ltMastUserRoles.user_Id = ?  \
+	AND (ltMastUserRoles.start_Date) <= SYSDATE AND ((ltMastUserRoles.end_Date) IS NULL OR ltMastUserRoles.END_DATE >= SYSDATE) ) \
+	AND ltMastRoleModules.module_Id IN( SELECT ltMastModules.module_Id \
+	FROM lt_Mast_Modules ltMastModules  WHERE ltMastModules.status = 'ACTIVE' )  \
+	AND (ltMastModules.start_Date) <= SYSDATE AND  ((ltMastModules.end_Date) IS NULL  OR (ltMastModules.end_Date) >= SYSDATE) \
+	order by ltMastModules.SEQUENCE_NUMBER asc

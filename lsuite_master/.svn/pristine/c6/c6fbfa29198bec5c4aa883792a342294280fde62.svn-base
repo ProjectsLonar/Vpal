@@ -1,0 +1,95 @@
+getLtMastAttachmentTypeDatatableRecords = select  *  from  \
+(SELECT a.*,ROWNUM RNUM from \
+( select am.ATTACHMENT_TYPE_ID,am.MODULE_CODE,am.ATTACHMENT_NAME,am.START_DATE,am.END_DATE,am.COMPANY_ID , \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',am.STATUS) as STATUS, \
+lt_vpal_common_pkg.get_comn_value_name('ATTACHMENT_MODULE',am.MODULE_CODE) as MODULE  \
+FROM  LT_MAST_ATTACHMENT_TYPE am  \
+WHERE   am.COMPANY_ID = ? \
+AND upper( am.ATTACHMENT_NAME) LIKE  nvl(?,upper( am.ATTACHMENT_NAME))  \
+AND  upper( am.MODULE_CODE) LIKE  nvl(?,upper( am.MODULE_CODE))  \
+AND  nvl2( am.STATUS,upper( am.STATUS),'xx') LIKE  nvl(?,nvl2(am.STATUS,upper( am.STATUS),'xx')) \
+AND  TO_CHAR(am.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(am.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (am.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (am.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by \
+CASE WHEN 1 = ? then upper(am.ATTACHMENT_NAME) END asc, \
+CASE WHEN 11 = ? then upper(am.ATTACHMENT_NAME) END desc,\
+CASE WHEN 2 = ? then upper( am.MODULE_CODE) END asc, \
+CASE WHEN 12 = ? then upper(am.MODULE_CODE) END desc, \
+CASE WHEN 4 = ? THEN upper(am.STATUS) END asc, \
+CASE WHEN 14 = ? then upper(am.STATUS) END desc, \
+CASE WHEN 5 = ? then am.START_DATE END asc, \
+CASE WHEN 15 = ? then am.START_DATE END desc, \
+CASE WHEN 6 = ? then am.END_DATE END asc, \
+CASE WHEN 16 = ? then am.END_DATE END desc ,\
+CASE WHEN 7 = ? then am.last_update_date END desc, \
+CASE WHEN 17 = ? then am.last_update_date END asc) a  where ROWNUM <=?)  WHERE RNUM >=?
+
+
+getCountLtMastAttachmentType = select COUNT(am.ATTACHMENT_TYPE_ID) \
+FROM  LT_MAST_ATTACHMENT_TYPE am  \
+WHERE   am.COMPANY_ID = ? \
+AND upper( am.ATTACHMENT_NAME) LIKE  nvl(?,upper( am.ATTACHMENT_NAME))  \
+AND  upper( am.MODULE_CODE) LIKE  nvl(?,upper( am.MODULE_CODE))  \
+AND  nvl2( am.STATUS,upper( am.STATUS),'xx') LIKE  nvl(?,nvl2(am.STATUS,upper( am.STATUS),'xx')) \
+AND  TO_CHAR(am.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(am.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (am.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (am.END_DATE, SYSDATE ),'DD-MM-YYYY'))
+
+
+getAllLtMastAttachmentType = SELECT am.ATTACHMENT_TYPE_ID,am.MODULE_CODE,am.ATTACHMENT_NAME,am.DESCRIPTION, \
+am.FILE_SIZE,am.PDF,am.IMAGE,am.DOCUMENT,am.EXCEL,am.ZIP,am.START_DATE,am.END_DATE, \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',am.STATUS) as STATUS, am.IS_MANDATORY , \
+am.CREATED_BY,am.CREATION_DATE,am.LAST_UPDATE_LOGIN,am.LAST_UPDATED_BY,am.LAST_UPDATE_DATE,am.COMPANY_ID   \
+FROM LT_MAST_ATTACHMENT_TYPE am \
+WHERE am.COMPANY_ID = ? 
+
+getAllActiveLtMastAttachmentType = SELECT am.ATTACHMENT_TYPE_ID,am.MODULE_CODE,am.ATTACHMENT_NAME,am.DESCRIPTION, \
+am.FILE_SIZE,am.PDF,am.IMAGE,am.DOCUMENT,am.EXCEL,am.ZIP,am.START_DATE,am.END_DATE,  \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',am.STATUS) as STATUS,am.IS_MANDATORY , \
+am.CREATED_BY,am.CREATION_DATE,am.LAST_UPDATE_LOGIN,am.LAST_UPDATED_BY,am.LAST_UPDATE_DATE,am.COMPANY_ID \
+FROM LT_MAST_ATTACHMENT_TYPE am \
+WHERE UPPER(am.status) = 'ACTIVE'  \
+AND am.START_DATE <= SYSDATE \
+AND (am.END_DATE IS NULL OR am.END_DATE >= SYSDATE) \
+AND am.COMPANY_ID = ?
+
+
+getLtMastAttachmentTypeByID = SELECT am.ATTACHMENT_TYPE_ID,am.MODULE_CODE,am.ATTACHMENT_NAME,am.DESCRIPTION, \
+am.FILE_SIZE,am.PDF,am.IMAGE,am.DOCUMENT,am.EXCEL,am.ZIP,am.START_DATE,am.END_DATE,am.STATUS,  \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',am.STATUS) as STATUS_VALUE ,am.IS_MANDATORY , \
+lt_vpal_common_pkg.get_comn_value_name('ATTACHMENT_SIZE_MASTER',am.FILE_SIZE) as FILE_SIZE_VALUE , \
+am.CREATED_BY,am.CREATION_DATE,am.LAST_UPDATE_LOGIN,am.LAST_UPDATED_BY,am.LAST_UPDATE_DATE,am.COMPANY_ID   \
+FROM LT_MAST_ATTACHMENT_TYPE am \
+WHERE am.ATTACHMENT_TYPE_ID = ?
+
+
+findActiveLtMastAttachmentTypeLikeName = SELECT am.ATTACHMENT_TYPE_ID,am.MODULE_CODE,am.ATTACHMENT_NAME,am.DESCRIPTION, \
+am.FILE_SIZE,am.PDF,am.IMAGE,am.DOCUMENT,am.EXCEL,am.ZIP,am.START_DATE,am.END_DATE,  \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',am.STATUS) as STATUS,am.IS_MANDATORY , \
+am.CREATED_BY,am.CREATION_DATE,am.LAST_UPDATE_LOGIN,am.LAST_UPDATED_BY,am.LAST_UPDATE_DATE,am.COMPANY_ID \
+FROM LT_MAST_ATTACHMENT_TYPE am \
+WHERE UPPER(am.status) = 'ACTIVE'  \
+AND am.START_DATE <= SYSDATE \
+AND (am.END_DATE IS NULL OR am.END_DATE >= SYSDATE) \
+AND am.ATTACHMENT_NAME LIKE ? AND am.COMPANY_ID = ?
+
+
+listAllActiveAttachmentTypeByModule = SELECT am.ATTACHMENT_TYPE_ID,am.MODULE_CODE,am.ATTACHMENT_NAME,am.DESCRIPTION, \
+am.FILE_SIZE,am.PDF,am.IMAGE,am.DOCUMENT,am.EXCEL,am.ZIP,am.START_DATE,am.END_DATE,  \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',am.STATUS) as STATUS,am.IS_MANDATORY , \
+am.CREATED_BY,am.CREATION_DATE,am.LAST_UPDATE_LOGIN,am.LAST_UPDATED_BY,am.LAST_UPDATE_DATE,am.COMPANY_ID \
+FROM LT_MAST_ATTACHMENT_TYPE am \
+WHERE UPPER(am.status) = 'ACTIVE'  \
+AND am.START_DATE <= SYSDATE \
+AND (am.END_DATE IS NULL OR am.END_DATE >= SYSDATE) \
+AND UPPER(am.MODULE_CODE) = ? AND am.COMPANY_ID = ?
+
+
+findActiveLtMastAttachmentTypeLikeNameAndModule = SELECT am.ATTACHMENT_TYPE_ID,am.MODULE_CODE,am.ATTACHMENT_NAME,am.DESCRIPTION, \
+am.FILE_SIZE,am.PDF,am.IMAGE,am.DOCUMENT,am.EXCEL,am.ZIP,am.START_DATE,am.END_DATE,  \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',am.STATUS) as STATUS,am.IS_MANDATORY , \
+am.CREATED_BY,am.CREATION_DATE,am.LAST_UPDATE_LOGIN,am.LAST_UPDATED_BY,am.LAST_UPDATE_DATE,am.COMPANY_ID \
+FROM LT_MAST_ATTACHMENT_TYPE am \
+WHERE UPPER(am.status) = 'ACTIVE'  \
+AND am.START_DATE <= SYSDATE \
+AND (am.END_DATE IS NULL OR am.END_DATE >= SYSDATE) \
+AND am.ATTACHMENT_NAME = ? AND am.MODULE_CODE = ? AND am.COMPANY_ID = ?

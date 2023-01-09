@@ -1,0 +1,115 @@
+findByCostCenterCode = SELECT * FROM LT_MAST_COST_CENTERS l WHERE l.COST_CENTER_CODE  like ?
+
+
+findByCostCenterName = SELECT * FROM LT_MAST_COST_CENTERS l WHERE l.COST_CENTER_NAME  like ?
+
+findCostCentersAllActive = SELECT * FROM LT_MAST_COST_CENTERS l \
+									WHERE  (l.status = 'Active' OR l.status = 'ACTIVE') \
+						 			AND l.START_DATE <= SYSDATE \
+						 			AND (l.END_DATE IS NULL OR l.END_DATE >= SYSDATE) \
+						 			AND l.COMPANY_ID = ?
+						 
+						 
+findByActiveLikeCostCentersName = SELECT l.*, \
+nvl2(l.APPROVER_ID,( cmv.value_name||' '||em.first_name || ' '|| em.LAST_NAME||' ' || '(' ||em.EMPLOYEE_NUMBER||')' ) ,null) as approver_Name \
+FROM LT_MAST_COST_CENTERS l,LT_MAST_EMPLOYEES em,LT_MAST_COMN_MASTER_VALUES cmv ,LT_MAST_COMN_MASTER cm  \
+WHERE  \
+em.EMPLOYEE_ID(+) = l.APPROVER_ID  \
+AND cmv.value_code(+) = em.title and cmv.MASTER_ID(+) = cm.MASTER_ID AND cm.MASTER_NAME = 'TITLE_MASTER' \
+AND l.START_DATE <= SYSDATE  \
+AND (l.status = 'Active' OR l.status = 'ACTIVE') \
+AND (l.END_DATE IS NULL OR l.END_DATE >= SYSDATE )  \
+AND l.COMPANY_ID = ? \
+and (upper(l.COST_CENTER_NAME)  like ? OR upper(l.COST_CENTER_CODE) like ? ) \
+
+				 						   
+				 						   
+findByLikeCostCentersName = SELECT * FROM LT_MAST_COST_CENTERS l \
+									 WHERE  (l.status = 'Active' OR l.status = 'ACTIVE') \
+				 					 AND l.START_DATE <= SYSDATE \
+									 AND (l.END_DATE IS NULL OR l.END_DATE >= SYSDATE) \
+									 AND (upper(l.COST_CENTER_NAME)  like ? OR upper(l.COST_CENTER_CODE) like ?)
+									 
+									 
+checkDetails = SELECT COST_CENTER_ID, COST_CENTER_NAME, COST_CENTER_CODE \
+									  FROM LT_MAST_COST_CENTERS l \
+									  WHERE ( l.COST_CENTER_NAME  = ? \
+									  OR l.COST_CENTER_CODE = ? ) AND l.COMPANY_ID = ?
+									  
+									  
+findByCostCenterId = SELECT * FROM LT_MAST_COST_CENTERS l WHERE l.COST_CENTER_ID  = ?
+ 
+getLtMastCostCentersByID = SELECT l.COST_CENTER_ID,l.COST_CENTER_NAME,l.CREATED_BY,l.CREATION_DATE, \
+l.LAST_UPDATE_LOGIN,l.LAST_UPDATED_BY, l.COMPANY_ID ,l.COST_CENTER_CODE , \
+cmv.value_name status_value, l.STATUS,l.START_DATE,l.END_DATE,l.APPROVER_ID, \
+NVL2( l.APPROVER_ID, \
+ 				(me.TITLE ||' '|| me.FIRST_NAME ||' '|| me.LAST_NAME || ' ('|| me.EMPLOYEE_NUMBER||')'), null ) as employeeName, \
+ cm.COMPANY_NAME AS cmpName \
+ FROM LT_MAST_COST_CENTERS l, LT_MAST_EMPLOYEES me, LT_VEND_COMPANY_MASTER cm ,LT_MAST_COMN_MASTER_VALUES cmv \
+WHERE l.APPROVER_ID = me.EMPLOYEE_ID(+) \
+ AND l.COMPANY_ID=cm.COMPANY_ID(+) \
+ AND l.COST_CENTER_ID  = ? \
+ AND ( l.STATUS = cmv.VALUE_CODE(+) \
+ AND cmv.master_Id = ( SELECT MASTER_ID FROM LT_MAST_COMN_MASTER WHERE MASTER_NAME = 'STATUS_MASTER' ) ) 
+ 								 
+getDataTableLtMastCostCenters = select  *  \
+from (SELECT a.*,ROWNUM RNUM from(select cc.COST_CENTER_ID AS COST_CENTER_ID, cc.LAST_UPDATE_DATE, \
+cc.COST_CENTER_CODE AS COST_CENTER_CODE , \
+cc.COST_CENTER_NAME AS COST_CENTER_NAME, \
+cc.START_DATE AS START_DATE, \
+cc.END_DATE AS END_DATE,   \
+cmv.value_name AS status ,\
+nvl2(cc.approver_id,(cmvt.value_name||' '||em.FIRST_NAME||' '||em.LAST_NAME||' ( '||em.EMPLOYEE_NUMBER||' )'),null) AS APPROVER_NAME \
+from LT_MAST_COST_CENTERS cc,lt_mast_employees em  ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER_VALUES cmvt, LT_MAST_COMN_MASTER cm \
+WHERE \
+cc.APPROVER_ID = em.EMPLOYEE_ID(+) \
+AND  ( cc.STATUS =cmv.value_code (+) AND cmv.MASTER_ID = ( SELECT MASTER_ID FROM LT_MAST_COMN_MASTER WHERE MASTER_NAME = 'STATUS_MASTER' ) ) \
+AND em.TITLE = cmvt.value_code(+) and cmvt.MASTER_ID(+) = cm.MASTER_ID AND cm.MASTER_NAME = 'TITLE_MASTER' \
+AND cc.COMPANY_ID = ? \
+AND upper(cc.COST_CENTER_CODE) like  nvl(?,upper(cc.COST_CENTER_CODE)) \
+AND upper(cc.COST_CENTER_NAME) like  nvl(?,upper(cc.COST_CENTER_NAME)) \
+AND  UPPER(( em.TITLE||' '||em.FIRST_NAME||' '||em.LAST_NAME||'('||em.EMPLOYEE_NUMBER||')') ) \
+LIKE UPPER(COALESCE( ?, (em.TITLE||' '||em.FIRST_NAME||' '||em.LAST_NAME||'('||em.EMPLOYEE_NUMBER||')' ))) \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code)) \
+AND  TO_CHAR(cc.START_DATE,'DD-MM-YYYY')  LIKE nvl(?, TO_CHAR(cc.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (cc.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (cc.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by  \
+CASE WHEN 2 = ? then upper(cc.COST_CENTER_CODE) END asc, \
+CASE WHEN 12 = ? then upper(cc.COST_CENTER_CODE) END desc, \
+CASE WHEN 3 = ? then upper(cc.COST_CENTER_NAME) END asc, \
+CASE WHEN 13 = ? then upper(cc.COST_CENTER_NAME) END desc, \
+CASE WHEN 7 = ? then upper(APPROVER_NAME) END asc, \
+CASE WHEN 17 = ? then upper(APPROVER_NAME) END desc, \
+CASE WHEN 4 = ? then upper(cmv.value_code) END asc, \
+CASE WHEN 14 = ? then upper(cmv.value_code) END desc, \
+CASE WHEN 5 = ? then cc.START_DATE END asc, \
+CASE WHEN 15 = ? then cc.START_DATE END desc, \
+CASE WHEN 6 = ? then cc.END_DATE END asc, \
+CASE WHEN 16 = ? then cc.END_DATE END desc, \
+CASE WHEN 8 = ? then cc.last_update_date END desc, \
+CASE WHEN 18 = ? then cc.last_update_date END asc)a where ROWNUM <=? ) WHERE rnum >=?
+
+
+getCountLtMastCostCenters = select count(cc.COST_CENTER_ID) \
+from LT_MAST_COST_CENTERS cc,lt_mast_employees em  ,LT_MAST_COMN_MASTER_VALUES cmv,LT_MAST_COMN_MASTER_VALUES cmvt, LT_MAST_COMN_MASTER cm \
+WHERE \
+cc.APPROVER_ID = em.EMPLOYEE_ID(+) \
+AND  ( cc.STATUS =cmv.value_code (+) AND cmv.MASTER_ID = ( SELECT MASTER_ID FROM LT_MAST_COMN_MASTER WHERE MASTER_NAME = 'STATUS_MASTER' ) ) \
+AND em.TITLE = cmvt.value_code(+) and cmvt.MASTER_ID(+) = cm.MASTER_ID AND cm.MASTER_NAME = 'TITLE_MASTER' \
+AND cc.COMPANY_ID = ? \
+AND upper(cc.COST_CENTER_CODE) like  nvl(?,upper(cc.COST_CENTER_CODE)) \
+AND upper(cc.COST_CENTER_NAME) like  nvl(?,upper(cc.COST_CENTER_NAME)) \
+AND  UPPER(( em.TITLE||' '||em.FIRST_NAME||' '||em.LAST_NAME||'('||em.EMPLOYEE_NUMBER||')') ) \
+LIKE UPPER(COALESCE( ?, (em.TITLE||' '||em.FIRST_NAME||' '||em.LAST_NAME||'('||em.EMPLOYEE_NUMBER||')' ))) \
+AND upper(cmv.value_code) like nvl(?,upper(cmv.value_code)) \
+AND  TO_CHAR(cc.START_DATE,'DD-MM-YYYY')  LIKE nvl(?, TO_CHAR(cc.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (cc.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (cc.END_DATE, SYSDATE ),'DD-MM-YYYY'))
+
+
+getLtMastCostCentersDataForReport = SELECT l.* FROM LT_MAST_COST_CENTERS l	WHERE l.status = NVL(?,l.status)  \
+AND   l.start_date >= NVL(to_date( ?,'dd-mm-yyyy'),l.start_date)  \
+AND   NVL(l.end_date,SYSDATE) <= NVL(to_date( ?,'dd-mm-yyyy'),NVL(l.end_date,SYSDATE))	AND l.COMPANY_ID = ?		
+
+
+
+ltMastCostCentersgetAllQuery = select lmcc.* from LT_MAST_COST_CENTERS lmcc where lmcc.COMPANY_ID=?

@@ -1,0 +1,39 @@
+server.context-path=/lvendormaster
+server.contextPath=/lvendormaster
+server.port=8080
+logging.level.org=INFO
+#endpoints.cors.allowed-origins=*
+server.error.whitelabel.enabled = false
+
+
+
+## MULTIPART (MultipartProperties)
+# Enable multipart uploads
+spring.servlet.multipart.enabled=true
+# Threshold after which files are written to disk.
+spring.servlet.multipart.file-size-threshold=2KB
+# Max file size.
+spring.servlet.multipart.max-file-size=200MB
+# Max Request Size
+spring.servlet.multipart.max-request-size=215MB
+
+## File Storage Properties
+# All files uploaded through the REST API will be stored in this directory
+file.upload-dir=C:/LexaApplication/Upload/Images/
+
+
+#file.upload-dir = /home/server-p2p/vendorPortal
+
+
+LOGIN_URL = http://192.168.1.240:8080/vendorportal/#/login
+
+
+email.host : smtp.gmail.com
+ email.port : 567
+ email.username :  vendorportal1@lonartech.com
+ email.password : Lonar@123456
+ email.smtp.starttls.enable : true
+ email.smtp.auth : true
+ email.transport.protocol : smtp
+email.smtp.sendpartial : true
+ email.debug : false

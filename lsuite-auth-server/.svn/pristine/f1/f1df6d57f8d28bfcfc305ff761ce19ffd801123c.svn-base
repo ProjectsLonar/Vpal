@@ -1,0 +1,22 @@
+findByProjectTaskId = select * from LT_MAST_PROJECT_TASKS p where P.TASK_ID= ?
+
+findByTaskName = SELECT * FROM LT_MAST_PROJECT_TASKS mp \
+				WHERE UPPER(MP.TASK_NAME)  LIKE  nvl(?, upper(MP.TASK_NAME)) 
+				
+findAllActive = SELECT * FROM LT_MAST_PROJECT_TASKS l \
+			WHERE  (l.status = 'Active' OR l.status = 'ACTIVE') AND \
+			l.START_DATE <= SYSDATE AND (l.END_DATE IS NULL OR l.END_DATE >= SYSDATE)
+			
+findActiveLikeTaskName = SELECT * FROM LT_MAST_PROJECT_TASKS l \
+                         WHERE  (l.status = 'Active' OR l.status = 'ACTIVE') \
+						 AND l.START_DATE <= SYSDATE AND (l.END_DATE IS NULL OR l.END_DATE >= SYSDATE) \
+  			 			 AND (l.TASK_NAME)  like ?  
+				
+checkProjectTaskValuesDetails = SELECT lpt.TASK_CODE, lpt.TASK_NAME, lpt.TASK_ID FROM Lt_Mast_Project_Tasks lpt \
+								where lpt.TASK_CODE = ? 	
+								
+findLtMastProjectTasksByProjectId = select PROJECT_ID,TASK_ID,TASK_CODE,TASK_NAME,TASK_DESCRIPTION,\
+STATUS,START_DATE,END_DATE \
+from LT_MAST_PROJECT_TASKS p \
+where P.PROJECT_ID= ? \
+AND p.START_DATE <= SYSDATE AND (p.END_DATE IS NULL OR p.END_DATE >= SYSDATE)									

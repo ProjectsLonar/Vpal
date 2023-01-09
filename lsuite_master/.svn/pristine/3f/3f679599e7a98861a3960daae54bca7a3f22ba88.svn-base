@@ -1,0 +1,70 @@
+findByAccountCode = SELECT l.* FROM LT_MAST_GL_ACCOUNTS l WHERE UPPER(l.ACCOUNT_CODE) = ? AND l.COMPANY_ID = ?
+
+findByAccountName = SELECT l.* FROM LT_MAST_GL_ACCOUNTS l WHERE UPPER(l.ACCOUNT_NAME) = ? AND l.COMPANY_ID = ?
+ 
+findAllActiveGlAccounts = SELECT GL_ACCOUNT_ID, ACCOUNT_CODE, ACCOUNT_NAME  \
+FROM LT_MAST_GL_ACCOUNTS  WHERE COMPANY_ID = ? AND  START_DATE <= SYSDATE  AND ( end_Date IS NULL OR end_Date >= SYSDATE )
+
+findGlAccountsLikeAccountName = SELECT GL_ACCOUNT_ID, ACCOUNT_CODE, ACCOUNT_NAME \
+FROM LT_MAST_GL_ACCOUNTS  WHERE START_DATE <= SYSDATE AND  ( end_Date IS NULL OR end_Date >= SYSDATE ) \
+AND upper(ACCOUNT_NAME) like ? AND COMPANY_ID = ?
+
+getLtMastGlAccountsByID_22-2-2019 = SELECT l.* FROM LT_MAST_GL_ACCOUNTS l WHERE l.GL_ACCOUNT_ID = ?
+
+
+getLtMastGlAccountsByID = SELECT l.GL_ACCOUNT_ID,l.ACCOUNT_CODE,l.ACCOUNT_NAME,l.START_DATE,l.END_DATE,l.CREATED_BY, \
+l.CREATION_DATE,l.LAST_UPDATE_LOGIN,l.LAST_UPDATED_BY,l.LAST_UPDATE_DATE, l.STATUS,  \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER', l.STATUS) as STATUS_VALUE,  \
+lt_vpal_common_pkg.get_comn_value_name('ACCOUNT_TYPE', l.ACCOUNT_TYPE) as ACCOUNT_TYPE_VALUE,l.ACCOUNT_TYPE  \
+FROM LT_MAST_GL_ACCOUNTS l   WHERE l.GL_ACCOUNT_ID = ?
+
+
+findActiveGlAccountsLikeAccountName = SELECT GL_ACCOUNT_ID, ACCOUNT_CODE, ACCOUNT_NAME FROM Lt_MAST_Gl_Accounts \
+WHERE LOWER(CONCAT( CONCAT(account_Name,' '), account_Code)) LIKE  LOWER ( ? ) \
+AND START_DATE <= SYSDATE AND ( end_Date IS NULL OR end_Date >= SYSDATE ) AND COMPANY_ID = ?
+
+
+
+
+getGlAccountsDatatableRecords= select  *  from  \
+(SELECT a.*,ROWNUM RNUM from \
+( select ga.GL_ACCOUNT_ID,ga.ACCOUNT_CODE,ga.ACCOUNT_NAME,ga.START_DATE,ga.END_DATE, \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER',ga.STATUS) as STATUS, \
+lt_vpal_common_pkg.get_comn_value_name('ACCOUNT_TYPE', ga.ACCOUNT_TYPE) as ACCOUNT_TYPE  \
+FROM  LT_MAST_GL_ACCOUNTS ga  \
+WHERE   ga.COMPANY_ID = ? \
+AND upper( ga.ACCOUNT_CODE) LIKE  nvl(?,upper( ga.ACCOUNT_CODE))  \
+AND  upper( ga.ACCOUNT_NAME) LIKE  nvl(?,upper( ga.ACCOUNT_NAME))  \
+AND  nvl2( ga.ACCOUNT_TYPE,upper( ga.ACCOUNT_TYPE),'xx') LIKE  nvl(?,nvl2(ga.ACCOUNT_TYPE,upper( ga.ACCOUNT_TYPE),'xx')) \
+AND  TO_CHAR(ga.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(ga.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (ga.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ga.END_DATE, SYSDATE ),'DD-MM-YYYY')) \
+order by \
+CASE WHEN 2 = ? then upper(ga.ACCOUNT_CODE) END asc, \
+CASE WHEN 12 = ? then upper(ga.ACCOUNT_CODE) END desc, \
+CASE WHEN 3 = ? then upper( ga.ACCOUNT_NAME) END asc, \
+CASE WHEN 13 = ? then upper(ga.ACCOUNT_NAME) END desc, \
+CASE WHEN 4 = ? THEN upper(ga.ACCOUNT_TYPE) END asc, \
+CASE WHEN 14 = ? then upper(ga.ACCOUNT_TYPE) END desc, \
+CASE WHEN 5 = ? then ga.START_DATE END asc, \
+CASE WHEN 15 = ? then ga.START_DATE END desc, \
+CASE WHEN 6 = ? then ga.END_DATE END asc, \
+CASE WHEN 16 = ? then ga.END_DATE END desc,\
+CASE WHEN 7 = ? then ga.last_update_date END desc, \
+CASE WHEN 17 = ? then ga.last_update_date END asc) a  where ROWNUM <=?)  WHERE RNUM >=?
+
+getCountGlAccounts= select count(ga.GL_ACCOUNT_ID) \
+FROM  LT_MAST_GL_ACCOUNTS ga  \
+WHERE  ga.COMPANY_ID = ?  \
+AND upper( ga.ACCOUNT_CODE) LIKE  nvl(?,upper( ga.ACCOUNT_CODE))  \
+AND  upper( ga.ACCOUNT_NAME) LIKE  nvl(?,upper( ga.ACCOUNT_NAME))  \
+AND  nvl2( ga.ACCOUNT_TYPE,upper( ga.ACCOUNT_TYPE),'xx') LIKE  nvl(?,nvl2(ga.ACCOUNT_TYPE,upper( ga.ACCOUNT_TYPE),'xx')) \
+AND  TO_CHAR(ga.START_DATE,'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(ga.START_DATE,'DD-MM-YYYY'))  \
+AND  TO_CHAR(nvl (ga.END_DATE, SYSDATE ),'DD-MM-YYYY') LIKE nvl(?, TO_CHAR(nvl (ga.END_DATE, SYSDATE ),'DD-MM-YYYY'))
+
+
+getLtMastGlAccountsDataForReport = select ga.GL_ACCOUNT_ID,ga.ACCOUNT_CODE,ga.ACCOUNT_NAME,ga.START_DATE,ga.END_DATE \
+,lt_vpal_common_pkg.get_comn_value_name('ACCOUNT_TYPE',ga.ACCOUNT_TYPE)  as ACCOUNT_TYPE, \
+lt_vpal_common_pkg.get_comn_value_name('STATUS_MASTER', ga.STATUS) as STATUS_VALUE \
+FROM  LT_MAST_GL_ACCOUNTS ga  WHERE  ga.status = NVL(?,ga.status) \
+AND   ga.start_date >= NVL(to_date( ?,'dd-mm-yyyy'),ga.start_date)  \
+AND   NVL(ga.end_date,SYSDATE) <= NVL(to_date( ?,'dd-mm-yyyy'),NVL(ga.end_date,SYSDATE)) AND ga.COMPANY_ID = ?

@@ -1,0 +1,5 @@
+SERVER_URL =  http://localhost:8081/UserManagement
+
+CLIENT_URL_REST_EMIALVALIDATEURL = http://203.109.87.134:8090/vendorportal/#/login/emailValidate?id
+
+CLIENT_URL_REST_PASSWORDURL =  http://203.109.87.134:8090/vendorportal/#/login/emailValidate?id
